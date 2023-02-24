@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Custom Rule of Reading writing file" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+
+  List list = new ArrayList();
+  File file=new File("D:\\custom rule of reading file.csv");     
+  BufferedReader br=new BufferedReader(new FileReader(file)); 
+  StringBuffer sb  = new StringBuffer();
+  String line = "";
+  File f = new File("D:\\custom.csv");
+  f.createNewFile();
+  BufferedWriter bw = new BufferedWriter(new FileWriter(f));
+  while((line=br.readLine()) != null){
+    if(line.contains("Termed") || line.contains("Active") || line.contains("LAO")){
+      bw.write(line);
+      bw.append("\n");
+      bw.flush();
+    }
+  }
+  bw.close();
+
+
+  ]]></Source>
+        
+
+</Rule>

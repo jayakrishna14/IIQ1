@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="SP_SPNT_SNOW_INT_ServiceNow_Task_Rule" type="Workflow">
+          
+    
+    <Source><![CDATA[
+    import sailpoint.object.IdentityRequest;
+    import sailpoint.api.SailPointContext;
+    import sailpoint.object.Filter;
+    import sailpoint.object.Custom;
+    import sailpoint.object.QueryOptions;
+    import sailpoint.object.ApprovalItem;
+    import sailpoint.object.ApprovalSet;
+    import sailpoint.object.Comment;
+    import sailpoint.object.IdentityRequestItem;
+    import sailpoint.object.WorkflowSummary.ApprovalSummary;
+    import sailpoint.object.ProvisioningPlan.AccountRequest;
+    import sailpoint.object.ProvisioningPlan.AttributeRequest;
+    import sailpoint.object.TaskResult;
+    import sailpoint.object.Identity;
+    import sailpoint.object.Attributes;
+    import sailpoint.tools.Message;
+    import sailpoint.tools.Util;
+    import sailpoint.tools.GeneralException;
+    import sailpoint.api.IdIterator;
+
+    import java.net.URL;
+    import java.util.List;
+    import java.util.ArrayList;
+    import java.util.Map;
+    import java.util.HashMap;
+
+    import org.apache.oltu.oauth2.client.URLConnectionClient;
+    import org.apache.oltu.oauth2.client.request.OAuthClientRequest;
+    import org.apache.oltu.oauth2.client.response.OAuthAuthzResponse;
+    import org.apache.oltu.oauth2.client.response.OAuthJSONAccessTokenResponse;
+    import org.apache.oltu.oauth2.common.OAuth;
+    import org.apache.oltu.oauth2.common.exception.OAuthProblemException;
+    import org.apache.oltu.oauth2.common.exception.OAuthSystemException;
+    import org.apache.oltu.oauth2.common.message.types.GrantType;
+    import org.apache.oltu.oauth2.client.OAuthClient;
+
+    import sailpoint.integration.ApacheHttpClient;
+    import sailpoint.integration.HttpClient;
+
+    import org.apache.commons.logging.Log;
+    import org.apache.commons.logging.LogFactory;
+
+    import org.json.JSONObject;
+
+    Log log = LogFactory.getLog("SPSPNTSNOWINT.UpdateRITMStatus");
+
+    QueryOptions qo = new QueryOptions();
+
+    qo.add(Filter.like("IdentityRequest.source", "Service-Now")); // All Identity Requests created from 'ServiceNow Service Portal Integration' will have source set to 'Service-Now'
+    qo.add(Filter.or(Filter.like("IdentityRequest.executionStatus", "Completed"), Filter.like("IdentityRequest.executionStatus", "Terminated")));
+
+    Iterator idReqs = context.search(IdentityRequest.class, qo);
+
+    while (idReqs.hasNext()) {
+        IdentityRequest idReq = idReqs.next();
+
+        String requestProcessedState = idReq.getAttribute("requestProcessed");
+
+        if (requestProcessedState != null && !requestProcessedState.equals("Success")) {
+            if (taskResult != null) {
+                taskResult.addMessage("Processing Identity Request: " + idReq.getName());
+            }
+
+            ArrayList requestItemDataList = new ArrayList();
+            String idReqStatus = idReq.getCompletionStatus() != null ? idReq.getCompletionStatus().toString() : "Failure";
+
+            String snStatus = null;
+
+            List <IdentityRequestItem> identityRequestItem = idReq.getItems();
+
+            if (identityRequestItem != null && identityRequestItem.size() > 0) {
+                for (IdentityRequestItem idReqItems: identityRequestItem) {
+                    HashMap requestItemData = new HashMap();
+                    boolean approvalRejected = false;
+                    String approvalRejectedMsg = "";
+                    String approvalRejectedComments = "";
+                    String approvalState = idReqItems.getApprovalState() != null ? idReqItems.getApprovalState().toString() : null;
+                    String externalTaskId = idReqItems.getAttribute("externalTaskId");
+
+                    if (approvalState == "Rejected" || approvalState == "Canceled") {
+                        idReqStatus = "Incomplete";
+                        approvalRejected = true;
+                        List <ApprovalSummary> appSummary = idReq.getApprovalSummaries();
+
+                        if (appSummary != null) {
+                            for (ApprovalSummary appSum: appSummary) {
+                                if (!appSum.getRequest().startsWith("ServiceNow")) {
+                                    ApprovalSet appSet = appSum.getApprovalSet();
+
+                                    if (appSet != null) {
+                                        List <ApprovalItem> appItems = appSet.getItems();
+
+                                        for (ApprovalItem approvalItems: appItems) {
+                                            if (approvalState == "Canceled") {
+                                                approvalRejectedMsg = "Request was canceled on the IdentityIQ side!";
+                                            } else {
+                                                approvalRejectedMsg = "Requested item '" + approvalItems.getDisplayableValue() + "'  " + " " + approvalItems.getState() + " by '" + appSum.getCompleter() + "' on '" + appSum.getEndDate() + "'";
+                                            }
+
+                                            List approvalRejectComments = appSum.getComments();
+                                            if (approvalRejectComments != null && !approvalRejectComments.isEmpty()) {
+                                                for (Comment cmt: approvalRejectComments) {
+                                                    approvalRejectedComments += cmt.getComment() + "\n";
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }else{
+                        idReqStatus = "Success";
+                    }
+
+                    Custom statusMapConf = context.getObject(Custom.class, "SP_SPNT_SNOW_INT_IIQServiceNowStatusMapping");
+                    Map statusMap = (Map) statusMapConf.get("completionStatusMap");
+                    snStatus = statusMap.get(idReqStatus);
+
+                    requestItemData.put("approvalState", snStatus);
+                    requestItemData.put("externalTaskId", externalTaskId);
+                    requestItemData.put("approvalRejected", approvalRejected);
+                    requestItemData.put("approvalRejectedMsg", approvalRejectedMsg);
+                    requestItemData.put("approvalRejectedComments", approvalRejectedComments);
+
+                    requestItemDataList.add(requestItemData);
+
+                }
+            } else {
+                for (ApprovalSummary appSummery: idReq.getApprovalSummaries()) {
+                    for (ApprovalItem appItem: appSummery.getApprovalSet().getItems()) {
+                        HashMap requestItemData = new HashMap();
+                        String externalTaskId = appItem.getAttribute("externalTaskId");
+                        if (externalTaskId != null) {
+                            requestItemData.put("externalTaskId", externalTaskId);
+                            requestItemDataList.add(requestItemData);
+                        }
+                    }
+                }
+            }
+
+
+            if (snStatus != null) {
+                try {
+                    Custom conf = context.getObject(Custom.class, "SP_SPNT_SNOW_INT_ServiceNowCredentialConfig");
+                    String endpoint = conf.getString("url");
+
+                    JSONObject body = new JSONObject();
+
+                    HttpClient httpClient = (HttpClient) new ApacheHttpClient();
+                    String timeoutInSeconds = "120000";
+                    String username = conf.getString("username");
+                    String password = context.decrypt(conf.getString("password"));
+                    String accessToken = null;
+                    boolean isOauth2Enable = Boolean.parseBoolean(conf.getString("enableOauth2"));
+                    if (isOauth2Enable) {
+                        OAuthClientRequest request = OAuthClientRequest
+                            .tokenLocation(conf.getString("tokenURL"))
+                            .setGrantType(GrantType.PASSWORD)
+                            .setClientId(conf.getString("clientId"))
+                            .setClientSecret(context.decrypt(conf.getString("clientSecret")))
+                            .setUsername(username)
+                            .setPassword(password)
+                            .buildBodyMessage();
+                        OAuthClient client = new OAuthClient(new URLConnectionClient());
+                        OAuthJSONAccessTokenResponse tokenResponse = client.accessToken(request, OAuth.HttpMethod.POST);
+                        accessToken = tokenResponse.getAccessToken();
+                        httpClient.setup(Boolean.TRUE, 443, null, null, timeoutInSeconds, null);
+                    } else {
+                        httpClient.setup(Boolean.TRUE, 443, username, password, timeoutInSeconds, null);
+                    }
+
+                    Map headers = new HashMap();
+                    headers.put("Content-Type", "application/json");
+                    headers.put("Accept", "application/json");
+
+                    if (isOauth2Enable) {
+                        headers.put("Authorization", "Bearer " + accessToken);
+                    }
+
+                    for (HashMap requestItemData: requestItemDataList) {
+
+                         body.put("state", requestItemData.get("approvalState"));
+
+                        if (idReq.getErrors() != null && idReq.getErrors().size() > 0) {
+
+                            List messages = idReq.getErrors();
+
+                            String errorMessage = "";
+
+                            for (Message msg: messages) {
+                                errorMessage = errorMessage + msg.getMessage();
+                            }
+
+                            body.put("error", errorMessage);
+                        } else if (requestItemData.containsKey("approvalRejected") && requestItemData.get("approvalRejected") != null) {
+                            body.put("error", requestItemData.get("approvalRejectedMsg") + "\n" + requestItemData.get("approvalRejectedComments"));
+                        } else {
+                            body.put("error", "");
+                        }
+
+                        String url = endpoint + "updateState/" + requestItemData.get("externalTaskId");
+
+                        int status = httpClient.post(url, body.toString(), headers);
+
+                        if (null != log) {
+                            log.debug(httpClient.getBody());
+                        }
+
+                        if (status != 200) {
+                            idReq.getAttributes().put("requestProcessed", "Failed");
+                            context.saveObject(idReq);
+                            if (null != log) {
+                                log.debug("Failed to Update RITM Status. HTTP error code : " + status + httpClient.getBody());
+                            }
+                            throw new Exception("Failed to Update RITM Status. HTTP error code : " + status);
+                        } else {
+                            idReq.getAttributes().put("requestProcessed", "Success");
+
+                            context.saveObject(idReq);
+
+                            if (null != log) {
+                                log.debug("Success to Update RITM Status. HTTP error code : " + status + httpClient.getBody());
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    if (taskResult != null) {
+                        taskResult.addMessage(Message.error("Failed to handle request (" + idReq.getName() + "). Error: " + e.getMessage()));
+                    }
+
+                    log.error("Failed to handle request. Error: ", e);
+                }
+            } else {
+                log.error("Completion Status was not found! (Requesting for: " + idReq.getName() + ")");
+            }
+        }
+    }
+
+    context.commitTransaction();
+    sailpoint.tools.Util.flushIterator(idReqs);
+
+  ]]></Source>
+        
+
+</Rule>

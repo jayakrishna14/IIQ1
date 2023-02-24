@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="DelimitedFileProvisioning Rule">
+          
+    
+    <Source><![CDATA[
+  import java.io.BufferedReader;
+  import java.io.BufferedWriter;
+  import java.io.File;
+  import java.io.FileNotFoundException;
+  import java.io.FileOutputStream;
+  import java.io.FileReader;
+  import java.io.FileWriter;
+  import java.io.IOException;
+  import java.io.OutputStreamWriter;
+  import java.util.*;
+  import sailpoint.tools.*;
+  import sailpoint.object.*;
+  import sailpoint.tools.GeneralException;
+  import java.sql.*;
+  import sailpoint.api.*;
+  import sailpoint.object.ProvisioningPlan.*;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.ProvisioningPlan.AccountRequest.*;
+  import sailpoint.object.Identity;
+
+  ProvisioningPlan plan = new ProvisioningPlan();
+  List accountRequests = new ArrayList();
+  Identity user = context.getObjectByName(Identity.class,"Andrew Symonds");
+  plan.setIdentity(user);
+
+  ProvisioningPlan.AccountRequest accountRequest = new ProvisioningPlan.AccountRequest();
+  accountRequest.setOperation(ProvisioningPlan.AccountRequest.Operation.Create);
+  accountRequest.setApplication("HR");
+  accountRequest.setNativeIdentity("AS0469");
+
+  accountRequest.add(new AttributeRequest("Name","Andrew Symonds"));
+  accountRequest.add(new AttributeRequest("GivenName","Andrew"));
+  accountRequest.add(new AttributeRequest("Surname","Symonds"));
+  accountRequest.add(new AttributeRequest("Department","Engineering"));
+    accountRequest.add(new AttributeRequest("EmployeeID","AS0469"));
+  accountRequest.add(new AttributeRequest("EmailAddress","Andrew.Symonds@gmail.com"));
+  accountRequest.add(new AttributeRequest("NetworkID","Andrew.Symonds"));
+  
+accountRequest.add(new AttributeRequest("manager","1a2a"));
+  accountRequest.add(new AttributeRequest("inactiveIdentity","FALSE"));
+  accountRequest.add(new AttributeRequest("ACCOUNTHOMEPATH","D:\\hr-application-data.csv"));
+  accountRequests.add(accountRequest);
+  plan.setAccountRequests(accountRequests);
+	
+  System.out.println("plan from the rule"+plan.toXml());
+  Provisioner prov =  new Provisioner(context);
+  prov.execute(plan);
+  return prov.getProject();
+  ]]></Source>
+        
+
+</Rule>

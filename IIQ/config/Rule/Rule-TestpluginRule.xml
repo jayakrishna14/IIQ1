@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="testplugin rule">
+          
+    
+    <Source><![CDATA[
+  // Java program to write data in excel sheet using java code
+
+  import java.io.File;
+  import sailpoint.object.Identity;
+  import org.apache.poi.ss.usermodel.Cell;
+  import  org.apache.poi.hssf.usermodel.HSSFSheet;  
+  import  org.apache.poi.hssf.usermodel.HSSFWorkbook;  
+  import  org.apache.poi.hssf.usermodel.HSSFRow; 
+  import java.io.FileOutputStream;
+  import org.apache.poi.hssf.record.crypto.Biff8EncryptionKey;
+  import java.util.Map;
+  import java.util.Set;
+  import java.util.TreeMap;
+  import java.io.File;
+  import java.io.FileOutputStream;
+  import java.io.IOException;
+  import java.sql.Connection;
+  import java.sql.DriverManager;
+  import java.sql.PreparedStatement;
+  import java.sql.ResultSet;
+  import java.text.SimpleDateFormat;
+  import java.util.Date;
+  import sailpoint.object.IdentityRequest;
+  import sailpoint.object.ProvisioningProject;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.Filter;
+  import sailpoint.object.QueryOptions;
+
+  public static ArrayList database(String user) 
+  {
+    String psw="";
+    ArrayList list =new ArrayList();  
+    try
+    {
+      Class.forName("com.mysql.jdbc.Driver");
+      Connection con=DriverManager.getConnection("jdbc:mysql://localhost/identityiq?characterEncoding=utf8","root","root");
+      PreparedStatement stmt = con.prepareStatement("select name,password from identityiq.spt_identity where name=?;");  
+      stmt.setString(1,user);
+      ResultSet rs=stmt.executeQuery();
+
+      while(rs.next())
+      {
+        System.out.println("------"+rs.getString("name")+"\t"+rs.getString("password"));
+        psw=context.decrypt( rs.getString(2));
+
+        list.add(rs.getString(1));
+        list.add(psw);
+      }
+
+    }
+    catch(Exception e)
+    {
+      System.out.println(e);
+    }
+    System.out.println("888888888888888888"+list);
+    return list;
+  } 
+
+  public Map getAttributeData(String str,List list){
+
+    List list1 = new ArrayList();
+    List ideReqs = new ArrayList();
+    List apps = new ArrayList();
+    ResultSet res;
+    PreparedStatement stmnt;
+    Connection conn;
+    try
+    {
+      System.out.println("hiiiiiiiiiiiiiiiiiiiiiiiii");
+      Class.forName("com.mysql.jdbc.Driver");
+      conn=DriverManager.getConnection("jdbc:mysql://localhost/identityiq?characterEncoding=utf8","root","root");
+      stmnt = conn.prepareStatement("select target_display_name,created,type from identityiq.spt_identity_request where target_display_name=? and type='AccessRequest'");  
+      stmnt.setString(1,str);
+      
+      
+      res=stmnt.executeQuery();
+      //System.out.println("====="+res.getString(1));
+
+      while( res.next())
+      {
+        System.out.println(res.getString("target_display_name")+"\t"+res.getString("created")+"\t"+res.getString("type"));
+        list1.add(res.getString(1));
+        list1.add(res.getString(2));
+        list1.add(res.getString(3));
+      }
+    } catch(Exception e)
+    {
+      System.out.println(e);
+      
+    }
+    finally{
+      System.out.println("byeiiiiiiiiiiiiiiiiiiiiiiiii");
+      res.close();
+      stmnt.close();
+      conn.close();
+    }
+    
+
+System.out.println("\\\\\\\\\\\\\\\\\\\\\\"+list1);
+    String createdDate = list1.get(1);
+    long varLong = Long.parseLong(createdDate);
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+    Date sol2 = new Date(varLong);
+    Filter f = Filter.and(Filter.ge("created",sol2),Filter.eq("targetDisplayName","Amy Cox"));
+    QueryOptions qo = new QueryOptions();
+    qo.add(f);
+    ideReqs = context.getObjects(IdentityRequest.class,qo);
+    System.out.println("ideReqs"+ideReqs.size());
+    for(IdentityRequest idereq : ideReqs){
+     
+      ProvisioningProject pp = idereq.getProvisionedProject();
+       System.out.println("pppppp"+pp);
+      ProvisioningPlan plan = pp.getMasterPlan();
+      List accreqs = plan.getAccountRequests();
+      AccountRequest ar =(AccountRequest) accreqs.get(0);
+      System.out.println("arrrrrrr"+ar.toXml());
+      String appname = ar.getApplication();
+      System.out.println("appname"+appname);
+      apps.add(appname);
+    }
+
+    //Identity identity = context.getObjectByName(Identity.class,str);
+    
+
+    Map studentData = new TreeMap();
+    studentData.put("1",new Object[] { "name", "password", "applicationName" });
+    studentData.put("2", new Object[] { list.get(0),list.get(1),apps.toString()});
+    return studentData;
+  }
+
+
+  String str = "Amy Cox";
+  List list = database(str);
+  Map map = getAttributeData(str,list);
+  Set keyid = map.keySet();
+
+  int rowid = 0;
+  HSSFWorkbook workbook = new HSSFWorkbook();
+    HSSFSheet spreadsheet = workbook.createSheet(" IdentityAttribute Data ");
+    HSSFRow row;
+  for (String key : keyid) {
+    row = spreadsheet.createRow(rowid++);
+    Object[] objectArr = map.get(key);
+    int cellid = 0;
+
+    for (Object obj : objectArr) {
+      Cell cell = row.createCell(cellid++);
+      cell.setCellValue((String)obj);
+    }
+  }
+
+  FileOutputStream out = new FileOutputStream(new File("C:\\Sailpoint\\dbs.xls"));
+  Biff8EncryptionKey.setCurrentUserPassword(list.get(1));
+  workbook.write(out);
+  out.flush();
+  out.close();
+
+
+
+
+  ]]></Source>
+        
+
+</Rule>

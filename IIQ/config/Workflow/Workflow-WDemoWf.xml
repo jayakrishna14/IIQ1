@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" name="w demo WF" type="LCMIdentity">
+          
+    
+    <Step icon="Start" name="Start" posX="28" posY="10">
+                    
+        
+        <Transition to="step1"/>
+                  
+    
+    </Step>
+          
+    
+    <Step name="step1" resultVariable="name">
+                    
+        
+        <Arg name="name" value="jayakrishna"/>
+                    
+        
+        <Return name="name" to="name"/>
+                    
+        
+        <Transition to="step2"/>
+                  
+    
+    </Step>
+          
+    
+    <Step name="step2">
+                    
+        
+        <Script>
+                              
+            
+            <Source><![CDATA[
+        import org.apache.log4j.Logger;
+        import org.apache.log4j.Level;
+
+        Logger log = Logger.getLogger("sailpoint.services.bshdemo");
+        log.setLevel(Level.DEBUG);
+
+        if ( name == null ) { 
+        log.debug("step variable not available");
+        } else {
+        log.debug("step variable  available $name --"+name);
+        }
+        log.debug("wf variables "+wfcontext.getArguments());
+        log.debug("22222222"+ wfcontext.getVariable("name"));
+      ]]></Source>
+                            
+        
+        </Script>
+                    
+        
+        <Transition to="Stop"/>
+                  
+    
+    </Step>
+          
+    
+    <Step icon="Stop" name="Stop"/>
+        
+
+</Workflow>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Entitlement Description through rule" type="Validation">
+          
+    
+    <Source><![CDATA[
+   import sailpoint.object.*;
+  import sailpoint.api.*;
+  import java.util.List;
+  import sailpoint.object.ManagedAttribute;
+ Filter f = Filter.eq("value","CN=tester123,OU=Groups,OU=Demo,DC=Eshiam,DC=com");
+  ManagedAttribute ma = context.getUniqueObject(ManagedAttribute.class,f);
+  Map m = new HashMap();
+  m.put("en_US","HIIIII");
+  ma.getAttributes().put("sysDescriptions",m);
+  context.saveObject(ma);
+  context.commitTransaction();
+]]></Source>
+        
+
+</Rule>

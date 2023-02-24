@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Mover Rule" type="IdentityTrigger">
+          
+    
+    <Description>This rule can be used for Certification Events that use rule triggers. The previousIdentity and newIdentity hold snapshots of the identity before the update has occurred and the state of the identity after the update, respectively.</Description>
+          
+    
+    <Signature returnType="boolean"/>
+          
+    
+    <Source><![CDATA[import sailpoint.object.*;
+  import sailpoint.api.*;
+  
+  String oldValue = " ";
+String newValue = " ";
+  
+if ( !(previousIdentity instanceof Identity) || !(newIdentity instanceof Identity)) {
+  return false;
+}
+if(previousIdentity.getAttribute("email") != null){
+  
+  oldValue = previousIdentity.getAttribute("email");
+  System.out.println("previousIdentity-"+oldValue);
+
+if(newIdentity.getAttribute("email") != null){
+  
+  newValue = newIdentity.getAttribute("email");
+  System.out.println("newIdentity-"+newValue);
+if(oldValue != null && newValue != null && !(oldValue.equals(newValue))){
+  return true;
+}
+}
+}
+return false;]]></Source>
+        
+
+</Rule>

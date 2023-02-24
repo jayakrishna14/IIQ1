@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r returnPLAN" type="Validation">
+          
+    
+    <Source><![CDATA[
+
+  import java.util.ArrayList;
+  import java.util.List;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.ProvisioningPlan.Operation;
+  import sailpoint.object.ProvisioningProject;
+  import sailpoint.api.Provisioner;
+
+  if(operation =="Disable"){    
+    AttributeRequest atrReq=new AttributeRequest();
+    atrReq.setOperation(Operation.Set);
+    atrReq.setName("IIQDisabled");
+    atrReq.setValue(true);
+    ArrayList atrReqlist =new ArrayList();
+    atrReqlist.add(atrReq);
+
+    AccountRequest actReq=new  AccountRequest();
+    actReq.setApplication(applicationName);
+    actReq.setNativeIdentity(nativeIdentity);
+    actReq.setOperation(AccountRequest.Operation.Disable);
+    actReq.setAttributeRequests(atrReqlist);
+    ArrayList actReqlist =new ArrayList();
+    actReqlist.add(actReq);
+
+    ProvisioningPlan plan = new ProvisioningPlan();
+    plan.setNativeIdentity(identityName);
+    plan.setAccountRequests(actReqlist);
+    
+    Provisioner p=new Provisioner(context);
+    ProvisioningProject project=p.compile(plan);
+    p.execute(project);
+
+    return project.toXml();
+  }
+
+
+  ]]></Source>
+        
+
+</Rule>

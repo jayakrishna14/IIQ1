@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="JNL Scheduled Termination Criteria" type="IdentityTrigger">
+          
+    
+    <Description>This rule can be used for Certification Events that use rule triggers. The previousIdentity and newIdentity hold snapshots of the identity before the update has occurred and the state of the identity after the update, respectively.</Description>
+          
+    
+    <Signature returnType="boolean">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="previousIdentity">
+                                        
+                
+                <Description>
+          The identity before the refresh/aggregation (this will be null when an
+          identity is created).
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="newIdentity">
+                                        
+                
+                <Description>
+          The identity after the refresh/aggregation (this will be null when an
+          identity is deleted).
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                    
+        
+        <Returns>
+                              
+            
+            <Argument name="result">
+                                        
+                
+                <Description>
+          A boolean describing the result of the rule.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Returns>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.Identity;
+  import sailpoint.object.Custom;
+
+  import sailpoint.api.Matchmaker;
+  import sailpoint.object.IdentitySelector;
+  import sailpoint.object.GroupDefinition;
+
+  import org.apache.log4j.Logger;
+
+  Logger log = Logger.getLogger("JNL_Scheduled_Termination_Criteria");
+
+  Custom jnlCustomObj = context.getObject(Custom.class,"JNL Custom Common");
+
+  if(jnlCustomObj == null){
+    throw new GeneralException("Unable to get JNL custom object");
+  }
+
+  String oldAssignmentStatus=null;
+  String newAssignmentStatus=null;
+
+
+  boolean flag = false;
+
+  if (null != previousIdentity && null != newIdentity){
+    String preDisableStatus = previousIdentity.getAttribute("disableStatus");
+    String newDisableStatus = newIdentity.getAttribute("disableStatus");
+
+    oldAssignmentStatus = previousIdentity.getStringAttribute("status");
+    newAssignmentStatus = newIdentity.getStringAttribute("status");
+
+    if(oldAssignmentStatus == null || newAssignmentStatus == null) {
+      if (log.isDebugEnabled()) {
+        log.debug("Assignment status is null");
+      }
+    } else {
+      if(( oldAssignmentStatus.contains("Active") || oldAssignmentStatus.contains("LOA"))
+         && (newAssignmentStatus.contains("Termed") || newAssignmentStatus.contains("Term"))) {
+        if(preDisableStatus != null && newDisableStatus != null){
+          if(!(preDisableStatus.contains("Disabled") || newDisableStatus.contains("Disabled"))){
+            if (log.isDebugEnabled()) {
+              log.debug("Termination condition match - SUCCESS");
+            }
+            flag = true;
+          }
+        } else {
+          if (log.isDebugEnabled()) {
+            log.debug("Termination condition match - SUCCESS");
+          }
+          flag = true;
+        }
+      } else {
+        if (log.isDebugEnabled()) {
+          log.debug("Termination condition match - FAILED");
+        }
+      }
+    }
+    IdentitySelector idSel = new IdentitySelector();
+    Matchmaker mm = new Matchmaker(context);
+
+    GroupDefinition leaverExclutions = null;
+
+    leaverExclutions = context.getObjectByName(GroupDefinition.class, "JNL_Leaver_Exclusions");
+
+    if (null != leaverExclutions) {
+      idSel.setPopulation(leaverExclutions);
+
+      if (mm.isMatch(idSel, newIdentity)) {
+        flag = false;
+        if (log.isDebugEnabled()) {
+          log.debug("Termination exclusion criteria - MATCHED");
+        }
+        log.info("Termination overridden by membership in JNL_Leaver_Exclusions population");
+      }
+    }
+  }
+
+  return flag;
+  ]]></Source>
+        
+
+</Rule>

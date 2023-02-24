@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Assigning roles through Integration" type="Validation">
+          
+    
+    <Signature returnType="String">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="plan"/>
+                            
+        
+        </Inputs>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+  
+import sailpoint.object.Identity;
+import java.util.List;
+import sailpoint.object.ProvisioningPlan;
+import sailpoint.object.ProvisioningPlan.AccountRequest;
+import sailpoint.object.ProvisioningPlan.AttributeRequest;
+import sailpoint.api.Provisioner;
+
+
+   String role = "bundle role";
+ProvisioningPlan pillaPlan = new ProvisioningPlan();
+ProvisioningPlan.AccountRequest accReq = new ProvisioningPlan.AccountRequest();
+accReq.setApplication("IIQ");
+accReq.setOperation(ProvisioningPlan.AccountRequest.Operation.Modify);
+
+    System.out.println("@@@@ enter1 @@@");
+
+ProvisioningPlan.AttributeRequest attrReq = new ProvisioningPlan.AttributeRequest("assignedRoles", ProvisioningPlan.Operation.Set, role);
+      System.out.println("@@@@ enter2 @@@");
+
+accReq.add(attrReq);
+pillaPlan.add(accReq);
+  System.out.println("@@@@ enter @@@@");
+
+Identity requestee = context.getObjectByName(Identity.class, plan.getNativeIdentity());
+pillaPlan.setIdentity(requestee);
+Provisioner p = new Provisioner(context);
+  System.out.println("@@@ enter 4 @@@@");
+p.execute(pillaPlan);
+
+  context.saveObject(requestee);
+  context.commitTransaction();
+    
+  
+]]></Source>
+        
+
+</Rule>

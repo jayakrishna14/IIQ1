@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="testplugin rule1">
+          
+    
+    <Source><![CDATA[
+  import java.io.File;
+  import sailpoint.object.Identity;
+  import org.apache.poi.ss.usermodel.Cell;
+  import  org.apache.poi.hssf.usermodel.HSSFSheet;  
+  import  org.apache.poi.hssf.usermodel.HSSFWorkbook;  
+  import  org.apache.poi.hssf.usermodel.HSSFRow; 
+  import java.io.FileOutputStream;
+  import org.apache.poi.hssf.record.crypto.Biff8EncryptionKey;
+  import java.util.Map;
+  import java.util.Set;
+  import java.util.TreeMap;
+  import java.io.File;
+  import java.io.FileOutputStream;
+  import java.io.IOException;
+  import java.sql.Connection;
+  import java.sql.DriverManager;
+  import java.sql.PreparedStatement;
+  import java.sql.ResultSet;
+  import java.text.SimpleDateFormat;
+  import java.util.Date;
+  import sailpoint.object.IdentityRequest;
+  import sailpoint.object.ProvisioningProject;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.Filter;
+  import sailpoint.object.QueryOptions;
+  import sailpoint.object.Link;
+  import java.io.File;
+  import java.io.FileOutputStream;
+  import java.io.IOException;
+  import java.io.OutputStream;
+  import java.security.GeneralSecurityException;
+
+  import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+  import org.apache.poi.openxml4j.opc.OPCPackage;
+  import org.apache.poi.openxml4j.opc.PackageAccess;
+  import org.apache.poi.poifs.crypt.EncryptionInfo;
+  import org.apache.poi.poifs.crypt.EncryptionMode;
+  import org.apache.poi.poifs.crypt.Encryptor;
+  import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+  import org.apache.poi.xssf.usermodel.XSSFRow;
+  import org.apache.poi.xssf.usermodel.XSSFSheet;
+  import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+  import java.io.FileWriter;
+  import java.io.BufferedWriter;
+
+
+
+
+  Identity ide = context.getObjectByName(Identity.class,"James Smith");
+  List list = new ArrayList();
+  String str1 = "";
+  String str2 = "";
+  String str3 = "";
+  try{
+    HSSFWorkbook workbook = new HSSFWorkbook();
+    if(ide != null&& ide.getAttribute("Department").equalsIgnoreCase("Executive Management")){
+      String strtDate = "2022-08-19";
+      List links = ide.getLinks();
+      for(Link link:links){
+        if(link.getApplicationName().equals("HR") && link.getAttribute("HR_Start_Date").equals(strtDate)){
+          str1 = ide.getAttribute("Department");
+          str2 = ide.getAttribute("NetworkID");
+          str3 = link.getAttribute("HR_Start_Date");
+          list.add(str1);
+          list.add(str2);
+          list.add(str3);
+        }
+      }
+      Map map = new TreeMap();
+      map.put("1",new Object[] { "Department", "NetworkID", "HR_Start_Date" });
+      map.put("2", new Object[] { list.get(0),list.get(1),list.get(2)});
+      Set keyid = map.keySet();
+
+      int rowid = 0;
+
+      HSSFSheet spreadsheet = workbook.createSheet(" IdentityAttribute Data ");
+      HSSFRow row;
+      for (String key : keyid) {
+        row = spreadsheet.createRow(rowid++);
+        Object[] objectArr = map.get(key);
+        int cellid = 0;
+
+        for (Object obj : objectArr) {
+          Cell cell = row.createCell(cellid++);
+          cell.setCellValue((String)obj);
+        }
+      }
+
+      FileOutputStream out = new FileOutputStream(new File("C:\\Sailpoint\\dbs1234.xls"));
+      workbook.writeProtectWorkbook("adminnn", "");
+      workbook.write(out);
+      out.flush();
+      out.close();
+
+
+    }
+
+  } catch (Exception e) {
+    System.out.println("Exception while writting protected xlsx file");
+    e.printStackTrace();
+  }
+
+
+  ]]></Source>
+        
+
+</Rule>

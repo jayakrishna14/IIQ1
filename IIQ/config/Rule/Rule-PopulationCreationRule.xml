@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Population creation Rule" type="Validation">
+          
+    
+    <Source><![CDATA[
+   import sailpoint.object.*;
+  import sailpoint.api.*;
+  import java.util.*;
+  import java.util.List;
+  import sailpoint.object.GroupDefinition;
+  import sailpoint.object.Filter.CompositeFilter;
+  import sailpoint.object.Filter;
+  
+/* List l = new ArrayList();
+  QueryOptions qo = new QueryOptions();
+  Filter f = Filter.and(Filter.eq("links.application.name","AD"),Filter.like("name","A",Filter.MatchMode.START));
+  qo.add(f);
+  List ide = context.getObjects(Identity.class,qo);
+  for(Identity id:ide){
+    l.add(id.getDisplayName());
+  }
+  */
+  /*Filter f = new Filter();
+  f.setOperation("LIKE");
+  f.setProperty("displayName");
+  f.setMatchMode("START");
+  f.setValue("A"):
+  f.setIgnoreCase(true);*/
+  
+ /* Filter f1 = new Filter();
+  f1.setOperation("EQ");
+  f1.setProperty("links.application.name");
+  f1.setValue("AD");
+  f1.setIgnoreCase(true);
+  */
+  Filter f = Filter.eq("links.application.name","AD");
+  Filter f1 = Filter.like("name","A",Filter.MatchMode.START);
+  Filter filter = Filter.and(f,f1);
+  CompositeFilter cf = new CompositeFilter();
+  cf.add(filter);
+  
+  GroupFilter gf = new GroupFilter();
+  gf.add(cf);
+  
+  GroupDefinition gd = new GroupDefinition();
+  gd.setIndexed(true);
+  gd.setName("AD A population");
+  gd.setPrivate(true);
+ 
+]]></Source>
+        
+
+</Rule>

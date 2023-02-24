@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" libraries="Identity" name="w Mover-JDBC" type="IdentityLifecycle">
+          
+    
+    <Variable input="true" name="trigger">
+                    
+        
+        <Description>The IdentityTrigger</Description>
+                  
+    
+    </Variable>
+          
+    
+    <Variable initializer="joiner" name="flow">
+                    
+        
+        <Description>The flow</Description>
+                  
+    
+    </Variable>
+          
+    
+    <Variable initializer="joiner" input="true" name="trace"/>
+          
+    
+    <Variable input="true" name="event" transient="true">
+                    
+        
+        <Description>
+      The IdentityChangeEvent.  It can be used to build
+      the provisioning plan, but does not need to be
+      persisted with the case, so marked as transient.
+    </Description>
+                  
+    
+    </Variable>
+          
+    
+    <Variable input="true" name="identityName">
+                    
+        
+        <Description>The name of the identity.</Description>
+                  
+    
+    </Variable>
+          
+    
+    <Description>Process a new employee.</Description>
+          
+    
+    <Step icon="Start" name="Start" posX="28" posY="10">
+                    
+        
+        <Transition to="Process user"/>
+                  
+    
+    </Step>
+          
+    
+    <Step icon="Message" name="Process user" posX="148" posY="10" resultVariable="adPlan">
+                    
+        
+        <Description>Process the user that joined.</Description>
+                    
+        
+        <Script>
+                              
+            
+            <Source><![CDATA[
+        import sailpoint.object.*;
+        import sailpoint.api.*;
+        import sailpoint.api.Provisioner;
+
+
+        Identity identityObj = context.getObjectByName(Identity.class,identityName);
+        ProvisioningPlan plan = new ProvisioningPlan();
+        plan.setIdentity(identityObj);
+
+        AccountRequest jdbc = new AccountRequest();
+        jdbc.setApplication("JDBC");
+        //jdbc.setOp(ProvisioningPlan.ObjectOperation.Create);
+        //jdbc.setOp(ProvisioningPlan.ObjectOperation.Modify);
+        jdbc.setOp(ProvisioningPlan.ObjectOperation.Delete);
+
+        String emplID = identityObj.getLink(context.getObjectByName(Application.class,"HR Application")).getAttributes().get("EmployeeID");
+        String username = identityObj.getLink(context.getObjectByName(Application.class,"HR Application")).getAttributes().get("Name");
+        String fn = identityObj.getLink(context.getObjectByName(Application.class,"HR Application")).getAttributes().get("GivenName");
+        String ln = identityObj.getLink(context.getObjectByName(Application.class,"HR Application")).getAttributes().get("Surname");
+        String networkID = identityObj.getLink(context.getObjectByName(Application.class,"HR Application")).getAttributes().get("NetworkID");
+        String email = identityObj.getLink(context.getObjectByName(Application.class,"HR Application")).getAttributes().get("EmailAddress");
+        
+        jdbc.add(new AttributeRequest("Name", username));
+        jdbc.add(new AttributeRequest("FirstName", fn));
+        jdbc.add(new AttributeRequest("LastName", ln));
+        jdbc.add(new AttributeRequest("EmployeeID", emplID));
+        jdbc.add(new AttributeRequest("EmailAddress", email));
+        jdbc.add(new AttributeRequest("NetworkID", networkID));
+         
+        String dep=identityObj.getLink(context.getObjectByName(Application.class,"HR Application")).getAttributes().get("Department");
+        System.out.print("HR Department"+dep);
+
+        if(dep.equals("Accounting")||dep.equals("Finance"))
+        jdbc.add(new AttributeRequest("GroupId", ProvisioningPlan.Operation.Add,"2"));
+
+        else if(dep.equals("Engineering"))
+        jdbc.add(new AttributeRequest("GroupId", ProvisioningPlan.Operation.Add,"3"));
+
+        else if(dep.equals("Human Resources"))
+        jdbc.add(new AttributeRequest("GroupId", ProvisioningPlan.Operation.Add,"4"));
+
+        else
+        jdbc.add(new AttributeRequest("GroupId", ProvisioningPlan.Operation.Add,"1"));
+
+        plan.add(jdbc);
+
+        Provisioner provisioner = new Provisioner(context);
+        provisioner.execute(plan);
+        System.out.println("@@@plan in joiner workflow::" + plan.toXml());
+        return plan;
+
+      ]]></Source>
+                            
+        
+        </Script>
+                    
+        
+        <Transition to="provisionUser"/>
+                  
+    
+    </Step>
+          
+    
+    <Step icon="Task" name="provisionUser" posX="183" posY="12">
+                    
+        
+        <Arg name="approvalSet" value="ref:approvalSet"/>
+                    
+        
+        <Arg name="flow" value="ref:flow"/>
+                    
+        
+        <Arg name="identityName" value="ref:identityName"/>
+                    
+        
+        <Arg name="launcher" value="ref:launcher"/>
+                    
+        
+        <Arg name="plan" value="ref:adPlan"/>
+                    
+        
+        <Arg name="approvalScheme" value="none"/>
+                    
+        
+        <Arg name="foregroundProvisioning" value="false"/>
+                    
+        
+        <Return name="project" to="project"/>
+                    
+        
+        <Transition to="Stop"/>
+                  
+    
+    </Step>
+          
+    
+    <Step icon="Stop" name="Stop" posX="268" posY="10"/>
+        
+
+</Workflow>

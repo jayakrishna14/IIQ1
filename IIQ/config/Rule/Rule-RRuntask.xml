@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r runTASK" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.api.TaskManager;
+  import sailpoint.object.TaskDefinition;
+  import java.util.ArrayList;
+  import sailpoint.object.TaskSchedule;
+  import org.apache.log4j.Logger;
+  import org.apache.log4j.Level;
+  // Declare a logger class for us to isolate these messages during aggregation.
+  Logger log = Logger.getLogger("sailpoint.services.bshdemo");
+
+
+  TaskDefinition task = context.getObjectByName(TaskDefinition.class,"Refresh Identity Cube");
+  /*
+  ArrayList list=new ArrayList();
+  list.add("0 0/5 0 0 0 0");
+
+  TaskSchedule ts=new TaskSchedule();
+  ts.setCronExpressions(list);
+ // ts.setName("demo refreshCubeSheduler");
+  ts.setTaskDefinition(task);
+  //task.setArgument(uname, task);
+
+  TaskManager tm = new TaskManager(context);
+  tm.runNow(ts);
+  */
+  TaskManager tm = new TaskManager(context);
+  synchronized (tm) {
+    try {
+      tm.wait(10000);
+      tm.run(task, null);
+    } catch (InterruptedException e) {
+      log.error("thread was interrupted", e);
+      Thread.currentThread().interrupt();
+    }
+  }
+
+
+    ]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r JDBCoracle_global" type="JDBCProvision">
+          
+    
+    <Description>This rule is used by the JDBC connector to do provisioning of the data .</Description>
+          
+    
+    <Signature returnType="ProvisioningResult">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log" type="org.apache.commons.logging.Log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context" type="sailpoint.api.SailPointContext">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="application">
+                                        
+                
+                <Description>
+          The application whose data file is being processed.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="schema">
+                                        
+                
+                <Description>
+          The Schema currently in use.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="connection">
+                                        
+                
+                <Description>
+          A connection object to connect to database.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description>
+          The ProvisioningPlan created against the JDBC application.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                    
+        
+        <Returns>
+                              
+            
+            <Argument name="result">
+                                        
+                
+                <Description>
+          A Provisioning Result object is desirable to return the status.IT can be a new object or part of  Provisioning Plan
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Returns>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+  import java.sql.ResultSet;
+  import java.sql.Statement;
+  import java.sql.Connection;
+  import java.sql.DriverManager;
+  import java.sql.Types;
+  import sailpoint.api.SailPointContext;  
+  import sailpoint.object.Identity;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import java.sql.PreparedStatement;
+  import java.sql.SQLException;
+  import java.sql.Date;
+  import sailpoint.object.PasswordPolicy;
+  import sailpoint.api.PasswordGenerator;
+  import sailpoint.object.ProvisioningResult;
+  //import sailpoint.integration.*;
+
+  ProvisioningResult provresult = new ProvisioningResult();
+
+  if ( plan != null ) {
+
+    String user = plan.getNativeIdentity();
+    Identity identity = context.getObjectByName(Identity.class, user);
+
+    List accRequests = plan.getAccountRequests();
+    if ( ( accRequests != null ) && ( accRequests.size() > 0 ) ) {
+      for(AccountRequest accRequest : accRequests) {
+        try{
+          //for Create Operation---
+          if(AccountRequest.Operation.Create.equals(accRequest.getOperation())) {
+            System.out.println("Plan Operation is === "+accRequest.getOperation());
+            List AddReqList=new ArrayList();
+
+            List attribReqs=accRequest.getAttributeRequests();
+            System.out.println("attribReqs==="+attribReqs);
+            for(AttributeRequest attribReq:attribReqs){
+              System.out.println("attribReqName==="+attribReq.getName()+"\t"+"attribReqOp==="+attribReq.getOperation()+"\t"+"attribReqVal==="+attribReq.getValue());
+              if(attribReq.getName().equals("GROUPID") /* && attribReq.getOperation().toString().equals("Add") */) AddReqList.add(attribReq.getValue());
+            }
+            System.out.println("AddReqList==="+AddReqList+" Size="+RemReqList.size());
+
+            String query ="INSERT INTO krishna.oracle_users VALUES(?,?,?,?,?,?)";
+            PreparedStatement st = connection.prepareStatement(query);print("11111");
+            if(accRequest.getAttributeRequest("empid") != null) st.setString(1, accRequest.getAttributeRequest("empid").getValue());print("2222");
+            if(accRequest.getAttributeRequest("name") != null) st.setString(2, accRequest.getAttributeRequest("name").getValue());print("3333");
+            if(accRequest.getAttributeRequest("firstname") != null) st.setString(3, accRequest.getAttributeRequest("firstname").getValue());print("4444");
+            if(accRequest.getAttributeRequest("lastname") != null) st.setString(4, accRequest.getAttributeRequest("lastname").getValue());print("5555");
+            if(accRequest.getAttributeRequest("email") != null) st.setString(5, accRequest.getAttributeRequest("email").getValue());print("6666");
+            if(accRequest.getAttributeRequest("department") != null) st.setString(6, accRequest.getAttributeRequest("department").getValue());print("7777");
+            st.executeUpdate();
+
+            if(AddReqList.size()>0){
+              for(String value:AddReqList){
+                String query ="INSERT INTO krishna.U_RELATION VALUES(?,?)";
+                PreparedStatement st1 = connection.prepareStatement(query);
+                st1.setString(1,  accRequest.getAttributeRequest("empid").getValue());
+                st1.setString(2, value);
+                st1.executeUpdate();
+              }
+            }
+            // System.out.println("FinalQuery===INSERT INTO test.jdbcusers VALUES("+accRequest.getAttributeRequest("EMPID").getValue()+","+accRequest.getAttributeRequest("NAME").getValue()+","+accRequest.getAttributeRequest("FIRSTNAME").getValue()+","+accRequest.getAttributeRequest("LASTNAME").getValue()+","+accRequest.getAttributeRequest("EMAIL").getValue()+","+accRequest.getAttributeRequest("DEPARTMENT").getValue()+","+Req+")");
+
+            provresult.setStatus(ProvisioningResult.STATUS_COMMITTED);
+            System.out.println("JDBC Application- Create User Result is " +provresult.toXml());
+          }
+
+
+          //for Modify Operation---
+          if(AccountRequest.Operation.Modify.equals(accRequest.getOperation())) {
+            System.out.println("Plan Operation is === "+accRequest.getOperation());
+            List AddReqList=new ArrayList();
+            List RemReqList=new ArrayList();
+
+            List attribReqs=accRequest.getAttributeRequests();
+            for(AttributeRequest attribReq:attribReqs){
+              if(attribReq.getName().equals("GROUPID") && attribReq.getOperation().toString().equals("Add")) AddReqList.add(attribReq.getValue());
+              if(attribReq.getName().equals("GROUPID") && attribReq.getOperation().toString().equals("Remove")) RemReqList.add(attribReq.getValue());
+            }
+            System.out.println("AddReqList==="+AddReqList+"  RemReqList Size="+RemReqList.size());
+            if(AddReqList.size()>0){
+              for(String value:AddReqList){ 
+                String query ="INSERT INTO krishna.U_RELATION VALUES(?,?)";
+                PreparedStatement st1 = connection.prepareStatement(query);
+                st1.setString(1,  accRequest.getNativeIdentity());
+                st1.setString(2, value);
+                st1.executeUpdate();
+
+                System.out.println("INSERT INTO krishna.U_RELATION VALUES(?,?) ="+accRequest.getNativeIdentity()+","+value);
+                provresult.setStatus(ProvisioningResult.STATUS_COMMITTED);
+                System.out.println("JDBC Application- Modify User Result is " +provresult.toXml());
+              }
+            }
+            if(RemReqList.size()>0){
+              for(String value:RemReqList){
+               // System.out.println("delete from krishna.u_relation where u_relation.groupid=?");
+                String query ="delete from u_relation where u_relation.groupid=?";
+                PreparedStatement st1 = connection.prepareStatement(query);
+                st1.setString(1, value);
+                st1.executeUpdate();
+                System.out.println("delete from u_relation where u_relation.groupid=? ="+value);
+                provresult.setStatus(ProvisioningResult.STATUS_COMMITTED);
+                System.out.println("JDBC Application- Modify User Result is " +provresult.toXml());
+              }
+            }
+
+            System.out.println("JDBC Application- Modify User Result is " +provresult.toXml());
+          }
+
+          //for Delete Operation---
+          if(AccountRequest.Operation.Delete.equals(accRequest.getOperation())) {
+            System.out.println("Plan Operation is === "+accRequest.getOperation());
+            String query ="DELETE FROM krishna.oracle_users where empid=?";
+            PreparedStatement st = connection.prepareStatement(query);
+            st.setString(1, accRequest.getNativeIdentity());
+            st.executeUpdate();
+            provresult.setStatus(ProvisioningResult.STATUS_COMMITTED);
+            System.out.println("JDBC Appliaction- Delete User Result is " +provresult.toXml());
+          }
+        } 
+        catch (Exception e) {
+          System.out.println("JDBCApplication Error e: " +e.getMessage()); 
+          e.printStackTrace();
+        }
+        if (connection != null)
+          //  connection.commit();
+          connection.close();
+
+      }      
+    }  
+  }
+  return provresult;]]></Source>
+        
+
+</Rule>

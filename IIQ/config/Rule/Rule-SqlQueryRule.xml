@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="SQL query rule">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+
+ // return context.decrypt("1:ACP:j6M9W4FOjeAXVFOVu6fnteIDYtm7bV1m3IY2R7YZCRo=");
+  
+  List l = new ArrayList();
+  String query = "sql:SELECT i.name as IdentityName FROM identityiq82.spt_identity i,identityiq82.spt_application a,identityiq82.spt_link l WHERE i.id = l.identity_id AND l.application=a.id and  a.name = 'AD' "+" and EXTRACTVALUE(l.attributes, '/Attributes/Map/entry[@key=\"sAMAccountName\"]/@value') LIKE 'j%' ";
+  QueryOptions qo = new QueryOptions();
+  qo.setQuery(query);
+
+  Iterator it = context.search(query,null,qo);
+  while(it.hasNext()){
+    String str =  it.next();
+    Identity ide = context.getObject(Identity.class,str);
+    l.add(ide.getDisplayName());
+  }
+  return l;
+  ]]></Source>
+        
+
+</Rule>

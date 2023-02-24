@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="workflow scheduler_Rule">
+          
+    
+    <Source><![CDATA[
+    import sailpoint.object.Workflow;
+        import sailpoint.object.Identity;
+        import sailpoint.object.Attributes;
+        import sailpoint.workflow.StandardWorkflowHandler;
+        import sailpoint.request.WorkflowRequestExecutor;
+        import sailpoint.object.Request;
+        import sailpoint.object.RequestDefinition;
+        import sailpoint.api.RequestManager;
+        import java.util.Calendar;
+
+        if (identityName != null)
+        {
+          String workflowName = "Post Access Request Refresh";
+          String requestName = "Run '" + workflowName + "' for: " + identityName;
+          String requesterId = "spadmin";
+
+          Workflow eventWorkflow = context.getObject(Workflow.class, workflowName);
+          Identity id = context.getObjectByName(Identity.class, requesterId);
+         
+          Attributes reqArgs = new Attributes();
+          reqArgs.put(StandardWorkflowHandler.ARG_REQUEST_DEFINITION, WorkflowRequestExecutor.DEFINITION_NAME);
+          reqArgs.put(StandardWorkflowHandler.ARG_WORKFLOW, workflowName);
+          reqArgs.put(StandardWorkflowHandler.ARG_REQUEST_NAME, requestName);
+         
+          Attributes wfArgs = new Attributes();
+          wfArgs.put("identityName", identityName);
+          wfArgs.put("workflow", eventWorkflow.getId());
+          reqArgs.putAll(wfArgs);
+
+          Calendar calendar = Calendar.getInstance();
+          calendar.add(Calendar.MINUTE, 1);
+
+          Request req = new Request();
+          RequestDefinition reqdef = context.getObject(RequestDefinition.class, "Workflow Request");
+          req.setDefinition(reqdef);
+          req.setOwner(id);
+          req.setName(requestName);
+          req.setEventDate(calendar.getTime());
+          req.setAttributes( reqdef, reqArgs );
+          RequestManager.addRequest(context, req);
+        } else
+        {
+          log.warn ("No Identity value present");
+        }
+  ]]></Source>
+        
+
+</Rule>

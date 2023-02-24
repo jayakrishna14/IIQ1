@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Bundle PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Bundle displayName="IT-101" name="IT-101" type="it">
+          
+    
+    <Attributes>
+                    
+        
+        <Map>
+                              
+            
+            <entry key="sysDescriptions">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Map>
+                                                            
+                        
+                        <entry key="en_US" value="Desciption for IT-101"/>
+                                                          
+                    
+                    </Map>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                            
+        
+        </Map>
+                  
+    
+    </Attributes>
+          
+    
+    <Owner>
+                    
+        
+        <Reference class="sailpoint.object.Identity" name="abel.tuter"/>
+                  
+    
+    </Owner>
+          
+    
+    <Profiles>
+                    
+        
+        <Profile>
+                              
+            
+            <ApplicationRef>
+                                        
+                
+                <Reference class="sailpoint.object.Application" name="Service Now"/>
+                                      
+            
+            </ApplicationRef>
+                              
+            
+            <Constraints>
+                                        
+                
+                <Filter operation="CONTAINS_ALL" property="roles">
+                                                  
+                    
+                    <Value>
+                                                            
+                        
+                        <List>
+                                                                      
+                            
+                            <String>knowledge</String>
+                                                                    
+                        
+                        </List>
+                                                          
+                    
+                    </Value>
+                                                
+                
+                </Filter>
+                                      
+            
+            </Constraints>
+                            
+        
+        </Profile>
+                  
+    
+    </Profiles>
+        
+
+</Bundle>

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r JDBCProvision_globalAtrrSync" type="JDBCProvision">
+          
+    
+    <Description>This rule is used by the JDBC connector to do provisioning of the data .</Description>
+          
+    
+    <Signature returnType="ProvisioningResult">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="application">
+                                        
+                
+                <Description>
+          The application whose data file is being processed.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="schema">
+                                        
+                
+                <Description>
+          The Schema currently in use.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="connection">
+                                        
+                
+                <Description>
+          A connection object to connect to database.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description>
+          The ProvisioningPlan created against the JDBC application.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                    
+        
+        <Returns>
+                              
+            
+            <Argument name="result">
+                                        
+                
+                <Description>
+          A Provisioning Result object is desirable to return the status.IT can be a new object or part of  Provisioning Plan
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Returns>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+  import java.sql.Connection;
+  import java.sql.PreparedStatement;
+  import java.sql.SQLException;
+  import java.util.List;
+
+  import sailpoint.api.SailPointContext;
+  import sailpoint.object.Identity;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.ProvisioningResult;
+
+  ProvisioningResult provresult = new ProvisioningResult();
+  Identity identity=plan.getIdentity(); 
+  System.out.println("calling >>>> JDBCProvision_globalAtrrSync");
+  if (plan != null) {
+    System.out.println("accRequests ProvisioningPlan:\n" + plan.toXml());
+    List accRequests = plan.getAccountRequests();
+    if ((accRequests != null) && (accRequests.size() > 0)) {
+      for (AccountRequest accRequest : accRequests) {
+        try {
+          if (AccountRequest.Operation.Modify.equals(accRequest.getOperation())) {
+            List attrReqs = accRequest.getAttributeRequests();
+            if (attrReqs.size() > 0) {
+              for (int i = 0; i < attrReqs.size(); i++) {
+                 System.out.println("3333333333");
+                AttributeRequest at = (AttributeRequest) attrReqs.get(i);
+                // String query ="INSERT INTO test.jdbcusers VALUES(?,?,?,?,?,?,?)";
+                String attrName=at.getName();
+                String query = "UPDATE jdbc.hr_application SET  "+attrName+" = ? WHERE EmployeeID =?";
+                PreparedStatement st = connection.prepareStatement(query);
+                st.setString(1, at.getValue());
+                st.setString(2, identity.getAttribute("EmployeeID"));
+                System.out.println("st==="+st);
+                System.out.println("4444444");
+
+                st.executeUpdate();
+                provresult.setStatus(ProvisioningResult.STATUS_COMMITTED);
+                 System.out.println("5555555");
+              }
+
+              System.out.println("JDBC Application-  User Result is " + provresult);
+              System.out.println("plan in create rule" + plan.toXml());
+            }
+          }
+        } catch (Exception e) {
+          System.out.println("JDBCApplication Create Error e: " + e.getMessage());
+        } finally {
+
+          try {
+            if (connection != null)
+              connection.close();
+          } catch (SQLException e) {
+            e.printStackTrace();
+          }
+        }
+      }
+    }
+  }
+
+  return provresult;]]></Source>
+        
+
+</Rule>

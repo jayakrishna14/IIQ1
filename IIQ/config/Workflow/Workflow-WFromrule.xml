@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" name="w fromRule" type="LCMIdentity">
+          
+    
+    <Variable input="true" name="applicationName"/>
+          
+    
+    <Variable input="true" name="identityName"/>
+          
+    
+    <Variable input="true" name="identityDisplayName"/>
+          
+    
+    <Variable input="true" name="nativeIdentity"/>
+          
+    
+    <Variable input="true" name="operation"/>
+          
+    
+    <Variable input="true" name="plan"/>
+          
+    
+    <Variable input="true" name="project"/>
+          
+    
+    <Variable input="true" name="trace"/>
+          
+    
+    <Variable input="true" name="splitProvisioning"/>
+          
+    
+    <Variable input="true" name="recompileBeforeProvisioning"/>
+          
+    
+    <Variable input="true" name="identityRequestId"/>
+          
+    
+    <Variable input="true" name="foregroundProvisioning"/>
+          
+    
+    <Variable input="true" name="noTriggers"/>
+          
+    
+    <Step icon="Start" name="Start" posX="28" posY="10">
+                    
+        
+        <Transition to="step1"/>
+                  
+    
+    </Step>
+          
+    
+    <Step action="rule:r returnPLAN" icon="Task" name="step1" posX="98" posY="10" resultVariable="project">
+                    
+        
+        <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+                    
+        
+        <Arg name="identityName" value="ref:identityName"/>
+                    
+        
+        <Arg name="operation" value="ref:operation"/>
+                    
+        
+        <Arg name="applicationName" value="ref:applicationName"/>
+                    
+        
+        <Arg name="nativeIdentity" value="ref:nativeIdentity"/>
+                    
+        
+        <Transition to="compilePlan"/>
+                  
+    
+    </Step>
+          
+    
+    <Step icon="Default" name="compilePlan" posX="286" posY="10">
+                    
+        
+        <Arg name="identityName" value="ref:identityName"/>
+                    
+        
+        <Arg name="project" value="ref:project"/>
+                    
+        
+        <Arg name="identityRequestId" value="ref:identityRequestId"/>
+                    
+        
+        <Arg name="foregroundProvisioning" value="true"/>
+                    
+        
+        <Arg name="trace" value="true"/>
+                    
+        
+        <Arg name="noTriggers" value="ref:noTriggers"/>
+                    
+        
+        <Arg name="splitProvisioning" value="ref:splitProvisioning"/>
+                    
+        
+        <Arg name="recompileBeforeProvisioning" value="ref:recompileBeforeProvisioning"/>
+                    
+        
+        <WorkflowRef>
+                              
+            
+            <Reference class="sailpoint.object.Workflow" name="Provision with retries"/>
+                            
+        
+        </WorkflowRef>
+                    
+        
+        <Transition to="Stop"/>
+                  
+    
+    </Step>
+          
+    
+    <Step icon="Stop" name="Stop" posX="372" posY="10"/>
+        
+
+</Workflow>

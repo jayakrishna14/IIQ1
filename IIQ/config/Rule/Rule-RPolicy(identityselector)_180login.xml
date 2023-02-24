@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r Policy(IdentitySelector)_180Login" type="Policy">
+          
+    
+    <Description>This rule is used to determine if a Policy has been violated.</Description>
+          
+    
+    <Signature returnType="PolicyViolation">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="identity">
+                                        
+                
+                <Description>
+          The Identity being inspected.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="policy">
+                                        
+                
+                <Description>
+          The Policy being evaluated.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="constraint">
+                                        
+                
+                <Description>
+          The Constraint being evaluated.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                    
+        
+        <Returns>
+                              
+            
+            <Argument name="violation">
+                                        
+                
+                <Description>
+          The PolicyViolation object.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Returns>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+import sailpoint.api.SailPointContext;
+import sailpoint.object.Attributes;
+import sailpoint.object.Custom;
+import sailpoint.object.Filter;
+import sailpoint.object.Identity;
+import sailpoint.object.QueryOptions;
+import sailpoint.object.Policy;
+import sailpoint.object.PolicyViolation;
+import sailpoint.object.Link;
+import sailpoint.tools.GeneralException;
+import sailpoint.tools.Message;
+import java.text.SimpleDateFormat;
+import java.text.DateFormat;
+import java.util.*;
+/**
+* Returns a date <n> days before today.
+*/
+private Date getDateNDaysAgo(int numDays) {
+ Calendar cal = Calendar.getInstance();
+ Date returnDate = null;
+ cal.add(Calendar.DATE, -(numDays));
+ returnDate = cal.getTime();
+ return (returnDate);
+}
+/**
+* Checks if the first date is before the second date ignoring time.
+**/
+public static boolean isBeforeDay(Date date1, Date date2) {
+ if (date1 == null || date2 == null) {
+ throw new IllegalArgumentException("The dates must not be null");
+ }
+ Calendar cal1 = Calendar.getInstance();
+ cal1.setTime(date1);
+ Calendar cal2 = Calendar.getInstance();
+ cal2.setTime(date2);
+ if (cal1 == null || cal2 == null) {
+ throw new IllegalArgumentException("The dates must not be null");
+ }
+ if (cal1.get(Calendar.ERA) < cal2.get(Calendar.ERA)) return true;
+ if (cal1.get(Calendar.ERA) > cal2.get(Calendar.ERA)) return false;
+ if (cal1.get(Calendar.YEAR) < cal2.get(Calendar.YEAR)) return true;
+ if (cal1.get(Calendar.YEAR) > cal2.get(Calendar.YEAR)) return false;
+ return cal1.get(Calendar.DAY_OF_YEAR) < cal2.get(Calendar.DAY_OF_YEAR);
+}
+ 
+// Start of main rule logic
+PolicyViolation v = null;
+Date lastLoginDate = identity.getLastLogin();
+if (lastLoginDate == null)
+ lastLoginDate = new Date();
+Date testDate = getDateNDaysAgo(180);
+if (isBeforeDay(lastLoginDate, testDate)) {
+ v = new PolicyViolation();
+ v.setActive(true);
+ v.setIdentity(identity);
+ v.setPolicy(policy);
+ v.setConstraint(constraint);
+ v.setDescription("[Last Login Date [" + lastLoginDate.toString() + "] is more than 180 days ago.]");
+ v.setStatus(sailpoint.object.PolicyViolation.Status.Open);
+}
+return v;]]></Source>
+        
+
+</Rule>

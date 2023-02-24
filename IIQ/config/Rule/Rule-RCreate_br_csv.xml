@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r create_BR_CSV" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import java.io.BufferedReader;
+  import java.io.FileReader;
+  import java.io.IOException;
+  import java.util.ArrayList;
+  import java.util.HashMap;
+  import java.util.HashSet;
+
+  import sailpoint.api.SailPointContext;
+  import sailpoint.object.Application;
+  import sailpoint.object.Attributes;
+  import sailpoint.object.Bundle;
+  import sailpoint.object.Filter;
+  import sailpoint.object.Identity;
+  import sailpoint.object.Profile;
+  import sailpoint.tools.GeneralException;
+  import sailpoint.object.ManagedAttribute;
+  import sailpoint.object.QueryOptions;
+
+  // @SuppressWarnings({ "rawtypes", "unchecked", "null" })
+
+
+  String strFile = "D:\\Sailpoint\\connectors_CSV\\Bundle.csv";
+  BufferedReader br = new BufferedReader(new FileReader(strFile));
+  String strLine = "";
+  int i = 0;
+  //starting loop
+  while ((strLine = br.readLine()) != null) {
+    if(i==0){
+      i++;
+      continue;
+    }
+    String[] ar = strLine.split(",");
+
+    String brName = ar[0];
+    String brDesc = ar[1];
+    String brOwn = ar[2];
+    String dep = ar[3];
+
+    String itName = ar[4];
+    String itDesc = ar[5];
+    String itOwn = ar[6];
+    String ent = ar[7];
+    String app = ar[8];
+
+    //application
+    Application aps = context.getObjectByName(Application.class, app);
+    //identity
+    Identity id = context.getObjectByName(Identity.class, itOwn);
+    //ManagedAttrinbute >>
+    Filter mainfil = Filter.and(Filter.eq("application.name", app), Filter.eq("displayableName", ent));
+    QueryOptions qo=new QueryOptions();
+    qo.add(mainfil);
+    List maList = context.getObjects(ManagedAttribute.class, qo);
+    String managedAtr= maList.get(0).getAttribute();
+
+
+    if (context.getObjectByName(Bundle.class, brName) != null) {
+      Bundle bd=context.getObjectByName(Bundle.class, brName);
+      if((context.getObjectByName(Bundle.class, itName))!= null) {
+        Bundle rbd=context.getObjectByName(Bundle.class, itName);
+        bd.addRequirement(rbd);
+      }
+      if (brName.equals("BR-102")) {
+      if (context.getObjectByName(Bundle.class, "BR-101") != null ) {
+        Bundle pbd = context.getObjectByName(Bundle.class, "BR-101");
+        bd.addInheritance(pbd);
+      }
+    } 
+      context.saveObject(bd);
+      context.commitTransaction();
+    }
+   
+    else {
+      HashMap map = new HashMap();
+      map.put("en_US", itDesc);
+
+      Attributes atr = new Attributes();
+      atr.put("sysDescriptions", map);
+      atr.put("Department", dep);
+
+      Bundle b = new Bundle();
+      b.setType("business");
+      b.setName(brName);
+      b.setDisplayName(brName);
+      b.setAttributes(atr);
+      b.setOwner(id);
+
+      if((context.getObjectByName(Bundle.class, itName))!= null) {
+        Bundle rbd=context.getObjectByName(Bundle.class, itName);
+        b.addRequirement(rbd);
+      }
+      context.saveObject(b);
+      context.commitTransaction();
+
+    }
+     
+  }
+  ]]></Source>
+        
+
+</Rule>

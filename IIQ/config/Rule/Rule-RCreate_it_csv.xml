@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r create_IT_CSV" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import java.io.BufferedReader;
+  import java.io.FileReader;
+  import java.io.IOException;
+  import java.util.ArrayList;
+  import java.util.HashMap;
+  import java.util.HashSet;
+
+  import sailpoint.api.SailPointContext;
+  import sailpoint.object.Application;
+  import sailpoint.object.Attributes;
+  import sailpoint.object.Bundle;
+  import sailpoint.object.Filter;
+  import sailpoint.object.Identity;
+  import sailpoint.object.Profile;
+  import sailpoint.tools.GeneralException;
+  import sailpoint.object.ManagedAttribute;
+  import sailpoint.object.QueryOptions;
+
+  // @SuppressWarnings({ "rawtypes", "unchecked", "null" })
+
+
+  String strFile = "D:\\Sailpoint\\connectors_CSV\\Bundle.csv";
+  BufferedReader br = new BufferedReader(new FileReader(strFile));
+  String strLine = "";
+  int i = 0;
+  //starting loop
+  // print("@@@@@ :>>>>>");
+  while ((strLine = br.readLine()) != null) {
+    if(i==0){
+      i++;
+      continue;
+    }
+    String[] ar = strLine.split(",");
+
+    String itName = ar[4];
+    String itDesc = ar[5];
+    String itOwn = ar[6];
+    String ent = ar[7];
+    String app = ar[8];
+
+    //application
+    Application application = context.getObjectByName(Application.class, app);
+    //identity
+    Identity identity = context.getObjectByName(Identity.class, itOwn);
+    //ManagedAttrinbute >>
+    Filter mainfil = Filter.and(Filter.eq("application.name", app), Filter.eq("displayableName", ent));
+    QueryOptions qo=new QueryOptions();
+    qo.add(mainfil);
+    List maList = context.getObjects(ManagedAttribute.class, qo);
+
+    String managedAtr= maList.get(0).getAttribute();
+
+    ArrayList entList = new ArrayList();
+    entList.add(ent);
+    Filter newFilter = Filter.containsAll(managedAtr, entList);
+
+    ArrayList<Filter> constraintList = new ArrayList();
+    constraintList.add(newFilter);
+
+
+
+    if (context.getObjectByName(Bundle.class, itName) != null) {  
+      print("22222 profile Name : ");
+      Bundle existedBundle=context.getObjectByName(Bundle.class, itName);
+      List<Profile> existedProfiles=existedBundle.getProfiles();
+      if(existedProfiles !=null){ 
+        //print("33333 profile Name : "+existedProfiles.getName());
+        for(Profile profile:existedProfiles){
+          print("444444 profile Name : "+profile);
+          if(profile.getConstraints() != null && !(profile.getConstraints().contains(newFilter))){
+
+            Profile newPro = new Profile();
+            newPro.setApplication(application); 
+            newPro.setConstraints(constraintList);
+            existedBundle.add(newPro);
+            context.saveObject(existedBundle);
+            context.commitTransaction();
+            break;
+            print("condiltion "+existedBundle.toXml());
+            print("If condition >>>>>");
+
+          }
+
+        }
+      }
+      else{ 
+        print("555555 profile Name : ");
+        Profile newPro = new Profile();
+        newPro.setApplication(application); 
+        newPro.setConstraints(constraintList);
+        existedBundle.add(newPro);
+        context.saveObject(existedBundle);
+        context.commitTransaction();
+
+      }
+
+    }
+    else {
+      print("66666 profile Name : ");
+      HashMap map = new HashMap();
+      map.put("en_US", itDesc);
+
+      Attributes atr = new Attributes();
+      atr.put("sysDescriptions", map);
+
+      Profile newProfile = new Profile();
+      newProfile.setApplication(application);
+      newProfile.setConstraints(constraintList);
+
+      Bundle newBundle = new Bundle();
+      newBundle.setType("it");
+      newBundle.setName(itName);
+      newBundle.setDisplayName(itName);
+      newBundle.setAttributes(atr);
+      newBundle.setOwner(identity);
+      newBundle.add(newProfile);
+      print("7777 profile "+newBundle.toXml());
+      context.saveObject(newBundle);
+      context.commitTransaction();
+    }
+
+  }
+  context.commitTransaction();
+
+  ]]></Source>
+        
+
+</Rule>

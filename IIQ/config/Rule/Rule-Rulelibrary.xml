@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="RuleLibrary" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.api.*;
+import sailpoint.object.*;
+
+  public Link getLink(String bunName,String idName){
+Bundle bun=context.getObjectByName(Bundle.class,bunName);
+   String forest = bun.getAttribute("Forest");
+  Identity id = context.getObjectByName(Identity.class,idName);
+  List links = id.getLinks();
+  for(Link link:links){
+    if(link != null && forest.contains("INTL") && link.getNativeIdentity().endsWith("INTL")){
+       System.out.println("********INTL"+link.getNativeIdentity());
+      return link;
+    }else if (link != null && forest.contains("ITSERVICES") && link.getNativeIdentity().endsWith("ITSERVICES")){
+      System.out.println("********ITLink"+link.getNativeIdentity());
+      return link;
+    }else if (link != null && forest.contains("ATTMX") && link.getNativeIdentity().endsWith("ATTMX")){
+       System.out.println("********ATTMX"+link.getNativeIdentity());
+      return link;
+    }
+    }
+  return null;
+  }
+  
+  
+  public Identity getIdentity(String str){
+    Identity id = context.getObjectByName(Identity.class,str);
+  	return id;
+  }
+
+  
+  
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  
+  Identity identityObj = context.getObjectByName(Identity.class,"Debra Wood");
+  Application app=context.getObjectByName(Application.class,"AD");
+  
+  ProvisioningPlan plan = new ProvisioningPlan();
+        
+        plan.setIdentity(identityObj);
+        ProvisioningPlan.AccountRequest acctReqAD = new ProvisioningPlan.AccountRequest();
+        acctReqAD.setApplication("AD");
+        acctReqAD.setOp(ProvisioningPlan.ObjectOperation.Modify);
+  			//acctReqAD.add(new ProvisioningPlan.AttributeRequest("AC_NewName", "CN=Betty Young2"));
+				acctReqAD.add(new ProvisioningPlan.AttributeRequest("AC_NewParent", "OU=Users,OU=Demo,DC=Eshiam,DC=com"));
+  			plan.add(acctReqAD);
+        Provisioner provisioner = new Provisioner(context);
+        provisioner.execute(plan);
+  			identityObj.getLink(app).setNativeIdentity("CN=Debra Wood,OU=Users,OU=Demo,DC=Eshiam,DC=com");
+        identityObj.getLink(app).setAttribute("distinguishedName","CN=Debra Wood,OU=Users,OU=Demo,DC=Eshiam,DC=com");
+        context.saveObject(identityObj);
+        context.commitTransaction();
+        return identityObj.getLink(app).getAttribute("distinguishedName");
+  
+  
+  
+  
+  
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import java.util.*;
+  import java.text.SimpleDateFormat;  
+  import java.util.Date;  
+  import java.io.*;
+ int count=0;
+  Identity id = context.getObjectByName(Identity.class,"Katherine Langford");
+  Application app = context.getObjectByName(Application.class,"Test HR");
+  Application app1 = context.getObjectByName(Application.class,"HR");
+  List appList = new ArrayList();
+  appList.add(app.getName());
+  appList.add(app1.getName());
+  //String accountName=object.getStringAttribute("Name");
+//Identity id = context.getObjectByName(Identity.class,accountName);
+	
+  List links = id.getLinks();
+  if(links != null){
+    for(Link link :links){
+      if(appList.contains(link.getApplicationName())) count++;
+    }
+  }
+  if(count>1){
+
+	EmailOptions eo = new EmailOptions();
+       EmailTemplate et = context.getObjectByName(EmailTemplate.class,"Mitigation Expiration"); //pass the EmailTemplate object name here
+       Map args = new HashMap();
+       String mail = id.getEmail(); //set to-mail address here
+       eo.setTo(mail);
+       //et.setSubject("Accounts already available in :"+app.getName()+" and "+app1.getName());
+       //String body="\tHello,\n\t"+id.getName()+" already has accounts in "+app.getName()+" and "+app1.getName()+"\n\tThank You\n";
+       //et.setBody(body);
+  args.put("employeeId","143 I love You");
+    args.put("DisplayName",id.getDisplayName());
+    args.put("ipaddress","192.168.00.123");
+  eo.setVariables(args);
+  context.sendEmailNotification(et,eo);
+  }
+  return "Hiiii";
+  
+ 
+  Identity identityObj = context.getObjectByName(Identity.class,"Katherine Murray");
+  List entlist=new ArrayList();
+  entlist.add(identityObj.getName()+"_Intl");
+  entlist.add(identityObj.getName()+"_IT");
+  entlist.add(identityObj.getName()+"_attmx");
+  
+        ProvisioningPlan plan = new ProvisioningPlan();
+       
+        if(plan!=null)
+        {
+        plan.setIdentity(identityObj);
+        for(int i=0;i<entlist.size();i++){
+        ProvisioningPlan.AccountRequest acctReqAD = new ProvisioningPlan.AccountRequest();
+        acctReqAD.setApplication("JDBC");
+        acctReqAD.setOp(ProvisioningPlan.ObjectOperation.Create);
+        acctReqAD.setNativeIdentity(entlist.get(i));
+        acctReqAD.add(new ProvisioningPlan.AttributeRequest("GroupId", ProvisioningPlan.Operation.Set,"1"));    
+        
+        plan.add(acctReqAD);
+          }
+        Provisioner provisioner = new Provisioner(context);
+        provisioner.execute(plan);
+        context.saveObject(identityObj);
+        context.commitTransaction();
+        }
+
+        return identityObj;
+  /*
+        
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  
+  
+  Identity id = context.getObjectByName(Identity.class,"Aaron Nichols");
+  List links = id.getLinks();
+  List list=new ArrayList();
+  for(Link li:links){
+    list.add(li.getNativeIdentity());
+  }
+  return list;
+  //NEW COMMENT
+  
+ /* Identity id = context.getObjectByName(Identity.class,"Anna Ward");
+  List links = id.getLinks();
+  for(Link li: links){
+    if(li.getApplicationName().equals("Oldap")){
+      li.setAttribute("IIQDisabled",true);
+        	context.saveObject(li);
+        context.commitTransaction();
+      return li;
+    }
+  }
+  */
+ /* Custom cus = context.getObjectByName(Custom.class,"Checking app Object");
+   return cus.getAttributes().get("Application");
+  
+  List l = new ArrayList();
+  Filter f = Filter.eq("displayName","Aaron Nichols");
+  QueryOptions qo = new QueryOptions();
+  qo.add(f);
+  List ma = context.getObjects(IdentityEntitlement.class,qo);
+  for (IdentityEntitlement m:ma){
+    l.add(m.getAppName());
+    
+  }
+  return l;
+  */
+  
+/* Identity id = context.getObjectByName(Identity.class,"Hannah Baker");
+  String nativeIde = " ";
+  List links = id.getLinks();
+  for(Link li:links){
+    if(li.getApplicationName().equals("AD"))
+      nativeIde = li.getNativeIdentity();
+    
+  }
+  List l = new ArrayList();
+  l.add("CN=DEV_Mgmt,OU=Groups,OU=Demo,DC=Eshiam,DC=com");
+  l.add("CN=DEV_Stage,OU=Groups,OU=Demo,DC=Eshiam,DC=com");
+    ProvisioningPlan plan = new ProvisioningPlan();
+    plan.setIdentity(id);
+    AccountRequest ar = new AccountRequest();
+    ar.setApplication("AD");
+    ar.setOp(ProvisioningPlan.ObjectOperation.Modify);
+    ar.setNativeIdentity(nativeIde);
+      for(String s :l){
+    ar.add(new AttributeRequest("memberOf", ProvisioningPlan.Operation.Add,s));
+    
+    plan.add(ar);
+      }
+  
+  
+     Provisioner provisioner = new Provisioner(context);
+        provisioner.execute(plan);
+        context.saveObject(id);
+        context.commitTransaction();
+  
+    */
+  
+            
+    ]]></Source>
+        
+
+</Rule>

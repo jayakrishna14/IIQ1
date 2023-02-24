@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r Befor_Oldap_befProv_Rule" type="BeforeProvisioning">
+          
+    
+    <Description>An identityiq82 server-side rule that is executed before the connector's provisioning method is called. This gives the customer the ability to customize or react to anything in the ProvisioningPlan BEFORE it is sent to the underlying connectors used in provisioning. 
+
+    This rule will be called for any application found in a plan that also has a configured 'beforeProvisioningRule' configured.  
+
+    The plan can be updated directly in the rule by reference and does not need to return the plan.</Description>
+          
+    
+    <Source><![CDATA[import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+
+  System.out.println("BeforeProvision==="+plan.toXml());
+
+  List newAttr = new ArrayList();
+  AccountRequest newAr = new AccountRequest();
+  if(plan != null){
+    int count = 0;
+    List accreqs = plan.getAccountRequests();
+    for(int i=0; i<accreqs.size(); i++){
+      AccountRequest ar = (AccountRequest)accreqs.get(i);
+      List attreqs = ar.getAttributeRequests();
+      for(int j=0; j<attreqs.size(); j++){
+        AttributeRequest atr = (AttributeRequest) attreqs.get(j);
+        if(atr != null && atr.getName().equalsIgnoreCase("groups")){
+          List values = atr.getValue();
+          System.out.println("values----"+values.size());
+          if(values != null && values.size() > 2){
+            for(int x=0; x<values.size(); x++){
+              count++;
+              if(count > 2){
+                System.out.println("count----"+count);
+                newAttr.add(values.get(x));
+                // values.remove(values.get(x));
+              }
+            }
+            for(String str : newAttr){
+              values.remove(str);
+            }
+            System.out.println("errors----"+values.size());
+
+            newAr.setApplication(ar.getApplication());
+            System.out.println("ar.getApplication()----"+ar.getApplication());
+            newAr.setNativeIdentity(ar.getNativeIdentity());
+            System.out.println("ar.getNativeIdentity()----"+ar.getNativeIdentity());
+            newAr.setOp(ProvisioningPlan.ObjectOperation.Modify);
+            //newAr.setTargetIntegration(plan.getTargetIntegration());
+            AttributeRequest newAtr = new AttributeRequest();
+            newAtr.setName("groups");
+            newAtr.setOp(ProvisioningPlan.Operation.Add);
+            newAtr.setValue(newAttr);
+            newAr.add(newAtr);
+
+          }
+        }
+      }
+    }
+    plan.add(newAr);
+  }
+
+  System.out.println("mod Provision plan==="+plan.toXml());]]></Source>
+        
+
+</Rule>

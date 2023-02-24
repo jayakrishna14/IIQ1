@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r acctDeleteRule">
+          
+    
+    <Signature returnType="ProvisioningResult">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description> The Provisioning Plan </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="filePath">
+                                        
+                
+                <Description> application filePath </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+  System.out.println("deleteAcctRule @@@@@@@@@@@@@@@@");
+  ]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="MHP-JDBC telephoneId Connection Rule">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import java.sql.*;
+  import sailpoint.tools.JdbcUtil;
+  import java.sql.Connection;
+  import java.sql.DriverManager;
+  import java.sql.PreparedStatement;
+  import java.sql.ResultSet;
+  import java.sql.SQLException;
+  import java.util.ArrayList;
+  import java.util.Random;
+  import java.util.List;
+  import java.text.SimpleDateFormat;
+  import java.text.ParseException;
+  import java.util.Date;
+  import java.util.*;
+  import sailpoint.object.*;
+  import sailpoint.tools.*;
+  import sailpoint.api.*;
+  import sailpoint.connector.*;
+  import sailpoint.object.Attributes;
+  import sailpoint.object.Filter;
+  import sailpoint.object.Identity;
+  import sailpoint.object.QueryOptions;
+  import sailpoint.object.*;
+  import sailpoint.connector.Connector;  
+  import sailpoint.object.ResourceObject;
+
+  Connection con = null;
+  PreparedStatement preparedStatement = null;
+  List mobileList = new ArrayList();
+  List usedList = new ArrayList();
+  List userIdList = new ArrayList();
+
+  Filter f = Filter.eq("managerStatus",true);
+  //Filter f = Filter.eq("LifeCycleStatus","pending");
+  QueryOptions qo = new QueryOptions();
+  qo.addFilter(f);
+  List identities = context.getObjects(Identity.class,qo);
+
+  //To Get Connection of Database
+  con = context.getJdbcConnection();
+  String sqlQuery = "select * from identityiq82.telephoneid";
+  preparedStatement = con.prepareStatement(sqlQuery);
+  ResultSet rs = preparedStatement.executeQuery();
+
+  //converting the ResultSet into the Map
+  Map map = new HashMap();
+  while(rs.next()){
+    mobileList.add(rs.getString("mobileNo"));
+    usedList.add(rs.getString("used"));
+    userIdList.add(rs.getString("userId"));
+    map.put("mobileNo", mobileList);
+    map.put("used", usedList);
+    map.put("userId",userIdList);
+  }
+
+  //Executing our requirements
+  for(Identity identity : identities){
+    if(identity.getAttribute("mobileNo") != null){
+      List mobileIds = map.get("mobileNo");
+      if(mobileIds.contains(identity.getAttribute("mobileNo"))){
+        int index = mobileIds.indexOf(identity.getAttribute("mobileNo"));
+        if(usedList.get(index).equals("No")){
+          String mble = mobileList.get(index);
+          String identityName = identity.getDisplayName();
+          String updateQuery = "update identityiq82.telephoneid set used='Yes', userId=? where mobileNo=?";
+          PreparedStatement stmnt = con.prepareStatement(updateQuery);
+          stmnt.setString(1, identityName);
+          stmnt.setString(2, mble);
+          stmnt.executeUpdate();
+        }
+      }
+    }
+  }
+
+  ]]></Source>
+        
+
+</Rule>

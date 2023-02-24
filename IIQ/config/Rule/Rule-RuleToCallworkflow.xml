@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule to callWorkflow" type="Validation">
+          
+    
+    <Source><![CDATA[
+
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+
+  List list = new ArrayList();
+  list.add("James Smith");
+  list.add("Aaron Nichols");
+  list.add("Sara Berry");
+  list.add("Sarah Campbell");
+  list.add("Alice Ford");
+  list.add("Alan Bradley");
+
+  for(String id:list){
+    Identity identity = context.getObjectByName(Identity.class,id);
+    
+    IdentityChangeEvent event = new IdentityChangeEvent();
+    IdentityTrigger trigger = new IdentityTrigger();
+
+    HashMap map = new HashMap();
+    map.put("identityName", identity.getName());
+    map.put("approvalScheme", "none");
+    map.put("trigger", trigger);
+    map.put("event", event);
+  
+    WorkflowLaunch wflaunch = new WorkflowLaunch();
+    Workflow wfn = context.getObjectByName(Workflow.class, "Test-Workflow");
+    if (wfn != null)
+    {
+      wflaunch.setWorkflowName(wfn.getName());
+      wflaunch.setWorkflowRef(wfn.getName());
+      wflaunch.setVariables(map);
+      Workflower workflower = new Workflower(context);
+      WorkflowLaunch launch = workflower.launch(wflaunch);
+    }
+  }
+
+    ]]></Source>
+        
+
+</Rule>

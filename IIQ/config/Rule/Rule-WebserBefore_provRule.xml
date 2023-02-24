@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="WEBSER before_prov rule" type="BeforeProvisioning">
+          
+    
+    <Description>An identityiq82 server-side rule that is executed before the connector's provisioning method is called. This gives the customer the ability to customize or react to anything in the ProvisioningPlan BEFORE it is sent to the underlying connectors used in provisioning. 
+
+    This rule will be called for any application found in a plan that also has a configured 'beforeProvisioningRule' configured.  
+
+    The plan can be updated directly in the rule by reference and does not need to return the plan.</Description>
+          
+    
+    <Signature>
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description>
+          The ProvisioningPlan object on its way to the Connector.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="application">
+                                        
+                
+                <Description>
+          The application object that references this before/after script.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import java.util.*;
+  import sailpoint.tools.Util;
+  import java.util.HashSet;
+
+  
+  List list = new ArrayList();
+  if(plan != null){
+    System.out.println("**************-"+plan.toXml());
+    List acreqs = plan.getAccountRequests();
+
+    for (int i=0; i<acreqs.size(); i++){
+      AccountRequest ar = (AccountRequest)acreqs.get(i);
+      List atreqs = ar.getAttributeRequests();
+      String ideName = plan.getNativeIdentity();
+      Identity id = context.getObjectByName(Identity.class,ideName);
+      IdentityService is = new IdentityService(context);
+      Link link = is.getLink(id,application,null,ideName);
+
+      if(atreqs.size() == 1){
+        AttributeRequest atr = (AttributeRequest)atreqs.get(0);
+        if(atr.getOperation().equals(ProvisioningPlan.Operation.Remove) && link != null && link.getAttributes().get("groups").contains(atr.getValue())){
+          if (atr.getOperation().equals(ProvisioningPlan.Operation.Remove)) ar.setOp(ProvisioningPlan.ObjectOperation.Delete);
+          
+        }
+      }
+
+      /*if(atreqs.size()>1){
+        System.out.println("======="+atreqs.size());
+        for(int j=0; j<atreqs.size(); j++){
+          AttributeRequest atr = (AttributeRequest)atreqs.get(j);
+          System.out.println("atr"+atr.toXml());
+          if(link != null && (link.getAttributes().get("groups").contains(atr.getValue()))){
+            if(atr.getOperation().equals(ProvisioningPlan.Operation.Remove)) list.add(atr.getOperation());
+            if(atr.getOperation().equals(ProvisioningPlan.Operation.Add)) list.add(atr.getOperation());
+
+          }
+          
+        }
+         System.out.println("list"+list);
+        Set intersection = new HashSet(list);
+        log.error("intersection"+intersection);
+        intersection.retainAll(Set.of(ProvisioningPlan.Operation.Remove,ProvisioningPlan.Operation.Add));
+        
+      }*/
+    }
+   
+  }
+  System.out.println("------------"+plan.toXml());
+  ]]></Source>
+        
+
+</Rule>

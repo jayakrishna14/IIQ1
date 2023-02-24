@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r acctCreateRule">
+          
+    
+    <Signature returnType="ProvisioningResult">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description> The Provisioning Plan </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="filePath">
+                                        
+                
+                <Description> application filePath </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+  import java.io.BufferedWriter;
+  import java.io.File;
+  import java.io.FileWriter;
+  import sailpoint.api.TaskManager;
+  import sailpoint.object.Identity;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningResult;
+  import sailpoint.object.TaskDefinition;
+
+  System.out.println("ENTERING THE createAcctRule >>>>>>>>>>>");
+  private void writeLine( String filepath,  String line) throws Exception {
+    File file = new File(filepath);
+    FileWriter fw = new FileWriter(file, true);
+    BufferedWriter bw = new BufferedWriter(fw);
+    bw.newLine();
+    bw.write(line);
+    bw.close();
+    fw.close();
+    System.out.println("Line has been written successfully!!");
+  }
+
+  StringBuffer lineItem = new StringBuffer();
+  Identity id = plan.getIdentity();
+
+  String uname = id.getDisplayableName();
+  String fn = id.getFirstname();
+  String ln = id.getLastname();
+  String dep = (String) id.getAttribute("Department");
+  String eid = (String) id.getAttribute("EmployeeID");
+  String mail = (String) id.getAttribute("EmailAddress");
+  String nid = (String) id.getAttribute("NetworkID");
+  String manager = (String) id.getAttribute("manager");
+  String active = (String) id.getAttribute("inactiveIdentity");
+  String logon =  (String) id.getAttribute("lastLogon");
+
+  lineItem.append(uname + "," + fn + "," + ln + "," + dep + "," + eid + "," + mail + "," + nid + ","+ manager + "," + active + "," + logon);
+
+  String line = lineItem.substring(0, lineItem.length() - 1);
+  System.out.println("Line Item:>>>>>> \n" + line);
+
+  writeLine(filePath, line);
+  ProvisioningResult proResult = new ProvisioningResult();
+  proResult.setStatus(ProvisioningResult.STATUS_COMMITTED);
+  return proResult;
+  ]]></Source>
+        
+
+</Rule>

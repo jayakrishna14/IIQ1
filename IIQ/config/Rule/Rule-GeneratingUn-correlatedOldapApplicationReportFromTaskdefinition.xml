@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Generating Un-Correlated Oldap Application Report from taskdefinition">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.TaskDefinition;
+  
+  TaskDefinition td = context.getObjectByName(TaskDefinition.class,"Oldap Application Uncorelated Report");
+  TaskManager tm = new TaskManager(context);
+  tm.run(td,null);
+  ]]></Source>
+        
+
+</Rule>

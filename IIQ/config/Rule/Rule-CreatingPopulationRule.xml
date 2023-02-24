@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Creating Population rule">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.Filter.CompositeFilter;
+  import sailpoint.object.GroupDefinition;
+  
+  CompositeFilter cf = Filter.and(Filter.eq("correlated",true),Filter.like("links.application.name","T",Filter.MatchMode.START));
+  GroupDefinition gd = new GroupDefinition();
+  gd.setName("notT11");
+  gd.setIndexed(true);
+  gd.setPrivate(true);
+  gd.setFilter(cf);
+  context.saveObject(gd);
+  context.commitTransaction();
+  ]]></Source>
+        
+
+</Rule>

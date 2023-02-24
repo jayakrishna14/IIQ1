@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="DividingPlan">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+
+  List newAttr = new ArrayList();
+  if(plan != null){
+    int count = 0;
+    List accreqs = plan.getAccountRequests();
+    for(int i=0; i<accreqs.size(); i++){
+      AccountRequest ar = (AccountRequest)accreqs.get(i);
+      List attreqs = ar.getAttributeRequests();
+      for(int j=0; j<attreqs.size(); j++){
+        AttributeRequest atr = (AttributeRequest) attreqs.get(j);
+        if(atr.getName().equalsIgnoreCase("memberOf")){
+          List values = atr.getValue();
+          if(values.size() > 2){
+            for(String val :  values){
+              count++;
+              if(count > 2){
+                newAttr.add(val);
+                values.remove(val);
+              }
+            }
+            
+            AccountRequest newAr = new AccountRequest();
+            newAr.setApplication(plan.getTargetIntegration());
+            newAr.setNativeIdentity(ar.getNativeIdentity());
+            newAr.setOp(ProvisioningPlan.ObjectOperation.Modify);
+            newAr.setTargetIntegration(plan.getTargetIntegration());
+            AttributeRequest newAtr = new AttributeRequest();
+            newAtr.setName("memberOf");
+            newAtr.setOp(ProvisioningPlan.Operation.Add);
+            newAtr.setValue(newAttr);
+            plan.add(newAr);
+          }
+        }
+      }
+    }
+  }
+
+  ]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r Approval Workitem-Workflowcase ID Clone Search" type="Validation">
+          
+    
+    <Source><![CDATA[
+   import sailpoint.object.*;
+  import sailpoint.api.*;
+  
+  List matchedList = new ArrayList();
+  List unMatchedList = new ArrayList();
+  Filter f = Filter.eq("type","Approval");
+  QueryOptions qo = new QueryOptions();
+  qo.add(f);
+  List wfs = context.getObjects(WorkItem.class,qo);
+  for(WorkItem wf :wfs){
+    WorkflowCase wc = wf.getWorkflowCase();
+    Workflow wi = wc.getWorkflow();
+    Workflow.Approval wa = wi.findApproval(wf);
+    
+    if(wf.getId().equals(wa.getWorkItemId()))
+       matchedList.add(wa.getWorkItemId());
+    else 
+      unMatchedList.add(wa.getWorkItemId());
+       
+  }
+  return matchedList;
+]]></Source>
+        
+
+</Rule>

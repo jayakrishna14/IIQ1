@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Delete Users">
+          
+    
+    <Description>This rule is used by the JDBC connector to do provisioning of the data .</Description>
+          
+    
+    <Signature returnType="ProvisioningResult">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                    
+        
+        <Returns>
+                              
+            
+            <Argument name="count">
+                                        
+                
+                <Description>A Provisioning Result object is desirable to return the status.IT can be a new object or part of  Provisioning Plan</Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Returns>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+  									import sailpoint.object.Identity;
+  									import java.util.List;
+  									import java.util.ArrayList;
+  									import sailpoint.api.Terminator;
+  									import sailpoint.object.TaskDefinition;
+  									import sailpoint.object.TaskResult;
+  									import sailpoint.object.Filter;
+  									import sailpoint.object.QueryOptions;
+  
+  
+  
+  									TaskDefinition taskDef = context.getObjectByName(TaskDefinition.class,"Delete Users");
+  									System.out.println("Task Definition:"+taskDef);
+  									String idstr = taskDef.getString("ids");
+  									System.out.println("Ids:"+idstr);
+  									int count = 0;
+  									if(idstr!=null && !idstr.isEmpty())
+                    {
+                    			List ids = Arrays.asList(idstr.split(","));
+                      		System.out.println("IdsList:"+ids);
+                      		if(ids!= null && !ids.isEmpty())
+                          {
+                      						Filter idFilter = Filter.in("id",ids);
+                            			System.out.println("idFilter:"+idFilter);
+                            			QueryOptions opts = new QueryOptions();
+                            			opts.add(idFilter);
+                            			List idObjs = context.getObjects(Identity.class,opts);
+                            			System.out.println("IdObjects:"+idObjs);
+                            			for(Identity identity : idObjs)
+                                  {
+                                  					Terminator terminator = new Terminator(context);
+  																					terminator.deleteObject(identity);
+                                    				count++;
+                                  }
+                            			
+                          }
+                      
+                    }
+  
+  									TaskResult result = context.getObjectByName(TaskResult.class,"Delete users");
+  									if(result != null)
+                     result.setAttribute("count",count);
+  									return "Success";
+  									
+  									
+  ]]></Source>
+        
+
+</Rule>

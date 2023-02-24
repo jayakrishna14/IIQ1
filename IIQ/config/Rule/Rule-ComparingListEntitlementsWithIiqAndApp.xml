@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Comparing list Entitlements with IIQ and App">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.TaskDefinition;
+  
+ return context.decrypt("1:ACP:1RGWzu7weqLhG3ojGM/T44d/vObn+Z582FIDgBizSXA=");
+  ]]></Source>
+        
+
+</Rule>

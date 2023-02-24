@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r Before_ADprovision_Rule" type="BeforeProvisioning">
+          
+    
+    <Description>An identityiq82 server-side rule that is executed before the connector's provisioning method is called. This gives the customer the ability to customize or react to anything in the ProvisioningPlan BEFORE it is sent to the underlying connectors used in provisioning. 
+
+This rule will be called for any application found in a plan that also has a configured 'beforeProvisioningRule' configured.  
+
+The plan can be updated directly in the rule by reference and does not need to return the plan.</Description>
+          
+    
+    <Signature>
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description>
+          The ProvisioningPlan object on its way to the Connector.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="application">
+                                        
+                
+                <Description>
+          The application object that references this before/after script.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  
+   System.out.println("BeforeProvision==="+plan.toXml());
+  
+  List newAttr = new ArrayList();
+  AccountRequest newAr = new AccountRequest();
+  if(plan != null){
+    int count = 0;
+    List accreqs = plan.getAccountRequests();
+    for(int i=0; i<accreqs.size(); i++){
+      AccountRequest ar = (AccountRequest)accreqs.get(i);
+      List attreqs = ar.getAttributeRequests();
+      for(int j=0; j<attreqs.size(); j++){
+        AttributeRequest atr = (AttributeRequest) attreqs.get(j);
+        if(atr != null && atr.getName().equalsIgnoreCase("memberOf")){
+          List values = atr.getValue();
+          System.out.println("values----"+values.size());
+          if(values != null && values.size() > 2){
+            for(int x=0; x<values.size(); x++){
+              count++;
+              if(count > 2){
+                System.out.println("count----"+count);
+                newAttr.add(values.get(x));
+               // values.remove(values.get(x));
+              }
+            }
+            for(String str : newAttr){
+            	values.remove(str);
+            }
+            System.out.println("errors----"+values.size());
+            
+            newAr.setApplication(ar.getApplication());
+            System.out.println("ar.getApplication()----"+ar.getApplication());
+            newAr.setNativeIdentity(ar.getNativeIdentity());
+            System.out.println("ar.getNativeIdentity()----"+ar.getNativeIdentity());
+            newAr.setOp(ProvisioningPlan.ObjectOperation.Modify);
+            //newAr.setTargetIntegration(plan.getTargetIntegration());
+            AttributeRequest newAtr = new AttributeRequest();
+            newAtr.setName("memberOf");
+            newAtr.setOp(ProvisioningPlan.Operation.Add);
+            newAtr.setValue(newAttr);
+            newAr.add(newAtr);
+            
+          }
+        }
+      }
+    }
+    plan.add(newAr);
+  }
+  
+  System.out.println("mod Provision plan==="+plan.toXml());
+/*
+  Identity idobj = context.getObjectByName(Identity.class,"Jesse Pinkman");
+  if(plan != null){
+    
+      String nativeIdentity = "CN="+idobj.getName()+","+"OU=People,OU=Demo,DC=Eshiam,DC=com";
+    	AccountRequest acctreq = new AccountRequest();
+      acctreq.setNativeIdentity(nativeIdentity);
+    	acctreq.setApplication("AD");
+      acctreq.setOp(ProvisioningPlan.ObjectOperation.Create);
+      
+      acctreq.add(new AttributeRequest("sAMAccountName", ProvisioningPlan.Operation.Add,idobj.getName()));
+      acctreq.add(new AttributeRequest("distinguishedName", ProvisioningPlan.Operation.Add,nativeIdentity));
+      acctreq.add(new AttributeRequest("employeeID", ProvisioningPlan.Operation.Add,idobj.getAttribute("EmployeeID")));
+      acctreq.add(new AttributeRequest("givenName", ProvisioningPlan.Operation.Add,idobj.getFirstname()));
+      acctreq.add(new AttributeRequest("sn", ProvisioningPlan.Operation.Add,idobj.getLastname()));
+      acctreq.add(new AttributeRequest("password", ProvisioningPlan.Operation.Add,"Password@123"));
+     plan.add(acctreq);
+    
+    
+    
+    System.out.println("I'm in after before provision rule-"+plan.toXml());
+       // Provisioner provisioner = new Provisioner(context);
+        //provisioner.execute(subplan);
+        //context.saveObject(idobj);
+        //context.commitTransaction();
+        
+  }
+*/]]></Source>
+        
+
+</Rule>

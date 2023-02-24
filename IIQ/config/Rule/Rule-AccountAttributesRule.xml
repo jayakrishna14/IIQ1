@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Account Attributes Rule" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.Identitizer;
+  import sailpoint.object.Filter;
+  import sailpoint.api.*;
+  import java.util.*;
+  import java.util.List;
+  import sailpoint.object.ManagedAttribute;
+  import sailpoint.api.Terminator;
+ 
+ ObjectConfig obj = context.getObjectByName(ObjectConfig.class,"Link");
+ Application app = context.getObjectByName(Application.class,"AD");
+  AttributeSource as = new AttributeSource();
+  as.setApplication(app);
+  as.setName("givenName");
+  ObjectAttribute oa = new ObjectAttribute();
+  oa.add(as);
+  oa.setDisplayName("domainAccess");
+  oa.setEditModeString("ReadOnly");
+  oa.setExtendedNumber(1);
+  oa.setName("domainAccess");
+  oa.setType("string");
+  obj.add(oa);
+  context.saveObject(obj);
+  context.commitTransaction();
+  
+  Filter filter = Filter.eq("name","Alice Ford");
+Identity id = context.getUniqueObject(Identity.class,filter);
+ 
+  Identity refreshIdentity = ObjectUtil.lockObject(context, Identity.class, null, id.getName(), PersistenceManager.LOCK_TYPE_TRANSACTION);
+   
+    Attributes args = new Attributes();
+    args.put("refreshAttributes", true);
+    Identitizer identitizer = new Identitizer(context, args);  
+    identitizer.refresh(refreshIdentity);
+   
+    context.saveObject(refreshIdentity);
+    context.commitTransaction();
+  
+  ]]></Source>
+        
+
+</Rule>

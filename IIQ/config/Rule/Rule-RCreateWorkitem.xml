@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r Create WorkItem">
+          
+    
+    <Source><![CDATA[import sailpoint.object.*;
+
+  import sailpoint.persistence.Sequencer;
+  
+  
+  List l = new ArrayList();
+  l.add("CN=Cost-SavingsAnalysis,OU=Groups,OU=Demo,DC=Eshiam,DC=com");
+  l.add("CN=AccountsPayable,OU=Groups,OU=Demo,DC=Eshiam,DC=com");
+  Calendar expiration = Calendar.getInstance();
+  expiration.add(Calendar.DATE, 5);
+  //Date date = expiration.getTime();
+  Identity targetIdentity = context.getObjectByName(Identity.class, "Patrick Jenkins");
+  Identity manager = targetIdentity.getManager();
+  Identity requester = context.getObjectByName(Identity.class, "spadmin");
+
+  WorkItem item = new WorkItem();
+  item.setType(WorkItem.Type.Approval);
+  item.setOwner(manager);
+  item.setRequester(requester);
+  Sequencer sequencer = new Sequencer();
+  item.setName(sequencer.generateId(context, item));
+  item.setRenderer("lcmManualActionsRenderer.xhtml");
+  item.setLevel(WorkItem.Level.Normal);
+  item.setTarget(targetIdentity);
+  item.setTargetClass(Identity.class.getName());
+  item.setDescription("Approval Workitem requested for User: "+targetIdentity.getDisplayableName());
+  item.setHandler("sailpoint.api.Workflower");
+
+  Attributes attributes = new Attributes();
+  item.setAttributes(attributes);
+
+  ApprovalSet approvalSet = new ApprovalSet();
+  
+   for(String ent : l){
+     ApprovalItem approvalItem = new ApprovalItem();
+  approvalItem.setApplication("AD");
+  approvalItem.setNativeIdentity(targetIdentity.getName());
+  approvalItem.setOperation("Remove");
+  approvalItem.setValue(ent);
+     
+  approvalSet.add(approvalItem);
+  }
+  attributes.put("approvalSet", approvalSet);
+  attributes.put("identityDisplayName", targetIdentity.getDisplayableName());
+  attributes.put("identityName", targetIdentity.getName());
+
+  item.setExpiration(expiration.getTime());
+  context.startTransaction();
+  context.saveObject(item);
+  context.commitTransaction();
+
+     List items = approvalSet.getItems();
+  for(ApprovalItem ai : items){
+    if(ai.getState() == WorkItem.State.Rejected){
+      System.out.println("Rejected Workitems");
+    	return "rejected"; 
+    }
+  }
+     
+  
+  ]]></Source>
+        
+
+</Rule>

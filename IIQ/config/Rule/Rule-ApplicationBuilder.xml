@@ -162,7 +162,6 @@
       /**
        * Parse the input CSV file based on fix format.
        * and convert it to the attribute map for further processing.
-       
        */
       public void parseInputFile() {
           log.debug("Entering parseInputFile()...");

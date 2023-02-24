@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Manager  is not null" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  List li = new ArrayList();
+  String st = "Katherine Langford";
+  String str = "";
+Identity man1=null;
+  
+Identity id = context.getObjectByName(Identity.class,st);
+while(id.getManager() != null ){
+  if(id.getManager() == null){
+  	return  null;
+  }
+  
+  man1 = id.getManager();
+  str = man1.getDisplayName();
+  Identity i = context.getObjectByName(Identity.class,str);
+  System.out.println("id-"+i.getDisplayName());
+  id = i.getManager();
+    
+}
+  return li;
+  ]]></Source>
+        
+
+</Rule>

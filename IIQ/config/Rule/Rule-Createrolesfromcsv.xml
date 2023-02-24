@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="CreateRolesFromCSV">
+          
+    
+    <Source><![CDATA[
+  
+import sailpoint.api.*;
+  import sailpoint.object.*;
+  import java.util.*;
+  import java.text.*;
+  import sailpoint.tools.Util;
+
+  //BR Name,BR Description,BR Owner,Department,IT Name,IT Description,IT Owner,Entitlement,Application
+  //BR-101,Description for BR-101,spadmin,Department for BR-101,IT-101,Description for IT-101,Aaron Nichols,"CN=AccountingGeneral,OU=Groups,OU=Demo,DC=Eshiam,DC=com",Ad
+
+  String line = "";  
+  String delimiter = ",";
+  String[] header = null;
+  String[] values = null;
+  int i=1;
+  String customObjectName="testCustom6";
+  System.out.println("##########");
+
+  try   
+  { 
+    //parsing a CSV file into BufferedReader class constructor  
+    BufferedReader br1 = new BufferedReader(new FileReader("C:\\Sailpoint\\RoleCSV.csv"));  
+    while ((line = br1.readLine()) != null)   //returns a Boolean value  
+    {
+      System.out.println("##########"+i);
+      if(i>1) {
+        values = line.split(delimiter); 
+
+        String brName=values[0];
+        String brDesc=values[1];
+        String brOwner=values[2];
+        String department=values[3];
+        String itName=values[4];
+        String itDesc=values[5];
+        String itOwner=values[6];
+        String entName=values[7];
+        String appName=values[8];
+
+        itbundle1=context.getObjectByName(Bundle.class,itName);
+        
+        if(itbundle1==null){
+          Bundle itbundle = new Bundle();
+          itbundle.setType("it");
+          itbundle.addDescription("en_US",itDesc);
+          itbundle.setName(itName);
+          itbundle.setDisplayName(itName);
+
+          Identity itownerID=context.getObjectByName(Identity.class,itOwner);
+          itbundle.setOwner(itownerID);
+
+          Profile prof=new Profile();
+          Application application=context.getObjectByName(Application.class,appName);
+          prof.setApplication(application);
+
+          List entList=new ArrayList();
+          entList.add(entName);
+          Filter filter1=Filter.containsAll("Rolename",entList);
+          List filterList=new ArrayList();
+          filterList.add(filter1);
+          prof.setConstraints(filterList);
+          itbundle.add(prof);
+          context.saveObject(itbundle);
+          context.commitTransaction();
+
+          
+          
+          
+          System.out.println("itbundle1==="+itbundle.toXml());
+        }
+        
+        else {
+          List finalList=new ArrayList();
+                    
+          Profile prof=new Profile();
+          Application application=context.getObjectByName(Application.class,appName);
+          prof.setApplication(application);
+
+          List entList=new ArrayList();
+          entList.add(entName);
+          Filter filter1=Filter.containsAll("Rolename",entList);
+          List filterList=new ArrayList();
+          filterList.add(filter1);
+          prof.setConstraints(filterList);
+          itbundle1.add(prof);
+          context.saveObject(itbundle1);
+          context.commitTransaction();
+        
+          System.out.println("itbundle2==="+itbundle1.toXml());
+        }
+        
+      }
+      i++;
+    }
+   
+    i=1;
+    line="";
+    BufferedReader br2 = new BufferedReader(new FileReader("C:\\Sailpoint\\RoleCSV.csv"));
+    while ((line = br2.readLine()) != null)   //returns a Boolean value  
+    {  
+      System.out.println("*****"+i);
+      if(i>1) {
+        values = line.split(delimiter); 
+
+        String brName=values[0];
+        String brDesc=values[1];
+        String brOwner=values[2];
+        String department=values[3];
+        String itName=values[4];
+        String itDesc=values[5];
+        String itOwner=values[6];
+        String entName=values[7];
+        String appName=values[8];
+
+        Bundle itbundle2=context.getObjectByName(Bundle.class,itName);
+        System.out.println("itbundlefromBR==="+itbundle2.toXml());
+
+        Bundle brbundle1=context.getObjectByName(Bundle.class,brName);
+        if(brbundle1==null){
+          Bundle brbundle = new Bundle();
+          brbundle.setType("business");
+          brbundle.addDescription("en_US",brDesc);
+          brbundle.setName(brName);
+          brbundle.setDisplayName(brName);
+
+          Identity brownerID=context.getObjectByName(Identity.class,brOwner);
+          brbundle.setOwner(brownerID);
+          brbundle.setAttribute("domainValue",department);
+
+          List reqList=new ArrayList();
+          reqList.add(itbundle2);
+          brbundle.setRequirements(reqList);
+          context.saveObject(brbundle);
+          context.commitTransaction();
+          System.out.println("brbundle==="+brbundle.toXml());
+         
+        }
+        else {
+          List finalList=new ArrayList();
+          List reqList=brbundle1.getRequirements();
+          for(Bundle itrole:reqList){
+            finalList.add(itrole.getName());
+          }
+          if(!finalList.contains(itbundle2.getName())){
+            brbundle1.addRequirement(itbundle2);
+          }
+          context.saveObject(brbundle1);
+          context.commitTransaction();
+        }
+      }
+      i++;
+    }
+    
+  }
+  catch (IOException e)   
+  {  
+    e.printStackTrace();  
+  } 
+  return true;
+
+  ]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Application PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Application connector="sailpoint.connector.JDBCConnector" featuresString="DISCOVER_SCHEMA, PROVISIONING, SYNC_PROVISIONING, DIRECT_PERMISSIONS, SEARCH, ENABLE, UNLOCK" icon="databaseIcon" name="oracle_JDBC" profileClass="" type="JDBC">
+          
+    
+    <Attributes>
+                    
+        
+        <Map>
+                              
+            
+            <entry key="SQL" value="select * from krishna.demousers"/>
+                              
+            
+            <entry key="acctAggregationEnd">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Date>1676959987402</Date>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="acctAggregationStart">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Date>1676959985337</Date>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="afterProvisioningRule"/>
+                              
+            
+            <entry key="aggregationMode">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean/>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="beforeProvisioningRule"/>
+                              
+            
+            <entry key="compositeDefinition"/>
+                              
+            
+            <entry key="deltaTable"/>
+                              
+            
+            <entry key="driverClass" value="oracle.jdbc.driver.OracleDriver"/>
+                              
+            
+            <entry key="getDeltaSQL"/>
+                              
+            
+            <entry key="getObjectSQL" value="select * from krishna.users where EMAIL=$(identity)"/>
+                              
+            
+            <entry key="isPermissionEnabled">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean/>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="jdbcCreateProvisioningRule" value="r JDBCOperationProvisioning_create"/>
+                              
+            
+            <entry key="jdbcExceptionBucketing">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean>true</Boolean>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="jdbcProvisionRule" value="r JDBCProvision_globalAtrrSync"/>
+                              
+            
+            <entry key="mergeRows">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean/>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="nativeChangeDetectionAttributeScope" value="entitlements"/>
+                              
+            
+            <entry key="nativeChangeDetectionAttributes"/>
+                              
+            
+            <entry key="nativeChangeDetectionEnabled">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean/>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="nativeChangeDetectionOperations"/>
+                              
+            
+            <entry key="partitionMode">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean/>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="partitionStatements"/>
+                              
+            
+            <entry key="password" value="3:ACP:z3h9f6aWKDRS7ypA1AcM3KS9hoiloI89zSJJTcEi2jE="/>
+                              
+            
+            <entry key="provisionRule" value="operationRule"/>
+                              
+            
+            <entry key="sysDescriptions">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Map>
+                                                            
+                        
+                        <entry key="en_US"/>
+                                                          
+                    
+                    </Map>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="templateApplication" value="JDBC Template"/>
+                              
+            
+            <entry key="testConnSQL" value="select * from krishna.demousers"/>
+                              
+            
+            <entry key="url" value="jdbc:oracle:thin:@localhost:1521:orcl"/>
+                              
+            
+            <entry key="useExecuteQuery">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean/>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="useStoredProcedureDelta">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean/>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="useStoredProcedureDirectPermission">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean/>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="useStoredProcedureGetObject">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean/>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="useStoredProcedurePartition">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean/>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="useStoredProcedureSqlStmt">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean/>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="useStoredProcedureTestConn">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Boolean/>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="user" value="krishna"/>
+                            
+        
+        </Map>
+                  
+    
+    </Attributes>
+          
+    
+    <Owner>
+                    
+        
+        <Reference class="sailpoint.object.Identity" name="spadmin"/>
+                  
+    
+    </Owner>
+          
+    
+    <Schemas>
+                    
+        
+        <Schema displayAttribute="NAME" identityAttribute="EMAIL" instanceAttribute="" nativeObjectType="account" objectType="account" permissionsRemediationModificationType="None">
+                              
+            
+            <AttributeDefinition name="NAME" type="string">
+                                        
+                
+                <Description/>
+                                      
+            
+            </AttributeDefinition>
+                              
+            
+            <AttributeDefinition name="FIRSTNAME" type="string">
+                                        
+                
+                <Description/>
+                                      
+            
+            </AttributeDefinition>
+                              
+            
+            <AttributeDefinition name="LASTNAME" type="string">
+                                        
+                
+                <Description/>
+                                      
+            
+            </AttributeDefinition>
+                              
+            
+            <AttributeDefinition name="EMAIL" type="string">
+                                        
+                
+                <Description/>
+                                      
+            
+            </AttributeDefinition>
+                              
+            
+            <AttributeDefinition entitlement="true" managed="true" multi="true" name="DEPARTMENT" type="string">
+                                        
+                
+                <Description/>
+                                      
+            
+            </AttributeDefinition>
+                            
+        
+        </Schema>
+                  
+    
+    </Schemas>
+          
+    
+    <ApplicationScorecard/>
+        
+
+</Application>

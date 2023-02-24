@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="unique_distinguishedName_AD_rule" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.api.SailPointContext;
+  import sailpoint.api.IdentityService;
+  import sailpoint.api.Provisioner;
+
+  import sailpoint.object.Application;
+  import sailpoint.object.Identity;
+  import sailpoint.object.Link;
+  import sailpoint.object.Custom;
+  import sailpoint.object.Rule;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.Workflow;
+
+  import java.io.IOException;
+  import java.io.InputStream;
+  import java.net.HttpURLConnection;
+  import java.net.URL;
+  import java.util.Scanner;
+
+  import sailpoint.object.ResourceObject;
+  import java.text.SimpleDateFormat;
+  import java.text.DateFormat;
+  import sailpoint.tools.CloseableIterator;
+  import sailpoint.tools.GeneralException;
+  import sailpoint.tools.Util;
+  import java.text.Normalizer;
+  import java.text.Normalizer.Form;
+  import sailpoint.object.EmailOptions;
+  import sailpoint.object.EmailTemplate;
+  import sailpoint.object.EmailFileAttachment;
+  import java.io.File;
+  import sailpoint.object.ManagedAttribute;
+
+  import java.nio.file.Files;
+
+  import sailpoint.connector.ADLDAPConnector;
+  import sailpoint.connector.Connector;
+  import sailpoint.connector.ConnectorException;
+  import org.apache.commons.lang3.StringUtils;
+  import org.apache.commons.logging.LogFactory;
+  import org.apache.commons.logging.Log;
+  import sailpoint.object.Attributes;
+  import sailpoint.object.ResourceObject;
+  import sailpoint.object.TaskResult;
+  import sailpoint.api.Aggregator;
+
+  String firstName="James";
+  String middleName="Mark";
+  String lastName="Smith";
+  Application application=context.getObjectByName(Application.class,"AD");
+
+
+
+
+  public String getsAMAccountName(String firstName, String middleName, String lastName, Application application) {
+    boolean isUniqueName = false;
+    String sAMAccountName = "";
+
+    if (Util.isNotNullOrEmpty(firstName) && Util.isNotNullOrEmpty(middleName) &&      Util.isNotNullOrEmpty(lastName)) {
+      if (Util.isNotNullOrEmpty(firstName) && Util.isNotNullOrEmpty(lastName)) { // Case :- A
+        sAMAccountName = finalStr(firstName.substring(0,1) + lastName);
+        isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+        System.out.println("****************sAMAccountName A :"+sAMAccountName+ "\nisUniqueName : "+isUniqueName);
+      }  if ((!isUniqueName) && Util.isNotNullOrEmpty(firstName) && Util.isNotNullOrEmpty(lastName)) { //Case:- B
+        sAMAccountName = finalStr(firstName.substring(0,1) + middleName);
+
+        isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+        System.out.println("****************sAMAccountName B :"+sAMAccountName+ "\nisUniqueName : "+isUniqueName);
+
+      }  if ((!isUniqueName) && Util.isNotNullOrEmpty(firstName) && Util.isNotNullOrEmpty(middleName) && Util.isNotNullOrEmpty(lastName) ) { //Case:- C
+        sAMAccountName = finalStr(firstName.substring(0,1) + middleName.substring(0,1)+lastName);
+        isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+        System.out.println("****************sAMAccountName C :"+sAMAccountName+ "\nisUniqueName : "+isUniqueName);
+
+      }   if ((!isUniqueName) && Util.isNotNullOrEmpty(firstName) && Util.isNotNullOrEmpty(middleName) && Util.isNotNullOrEmpty(lastName) ) { //Case:- E
+        sAMAccountName = finalStr(firstName.substring(0,1) + middleName+lastName.substring(0,1));
+        isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+        System.out.println("****************sAMAccountName E :"+sAMAccountName+ "\nisUniqueName : "+isUniqueName);
+
+      }  if ((!isUniqueName) && Util.isNotNullOrEmpty(firstName) && Util.isNotNullOrEmpty(middleName) && Util.isNotNullOrEmpty(lastName) ) { //Case:- D
+        sAMAccountName = finalStr(firstName.substring(0,1) + middleName.substring(0,1) + lastName.substring(0,1)+lastName);
+        isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+        System.out.println("****************sAMAccountName D :"+sAMAccountName+ "\nisUniqueName : "+isUniqueName);
+
+      } else { //if all cases are failed then appending numbers to sAMAccountName
+        int count = 1;
+        while (!isUniqueName && Util.isNotNullOrEmpty(sAMAccountName)) {
+          if (sAMAccountName.length() >= 12) {
+            sAMAccountName = sAMAccountName.substring(0,11)+String.valueOf(count);
+            isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+            if (isUniqueName) break;
+            count++;
+          } else {
+            sAMAccountName = sAMAccountName+String.valueOf(count);
+            isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+            if (isUniqueName) break;
+            count++;
+          }
+        }
+      }
+
+    } else if (Util.isNotNullOrEmpty(firstName) && Util.isNotNullOrEmpty(lastName)) {
+
+      if (Util.isNotNullOrEmpty(firstName) && Util.isNotNullOrEmpty(lastName)) { // Case :- A
+
+        sAMAccountName = finalStr(firstName.substring(0,1) + lastName);
+        isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+        System.out.println("######sAMAccountName A :"+sAMAccountName+ "\nisUniqueName : "+isUniqueName);
+
+      }  if ((!isUniqueName) && Util.isNotNullOrEmpty(firstName) && Util.isNotNullOrEmpty(lastName)) { //Case:- B
+        sAMAccountName = finalStr(firstName.substring(0,1) + lastName);
+        isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+        System.out.println("######sAMAccountName B :"+sAMAccountName+ "\nisUniqueName : "+isUniqueName);
+
+
+      }  if ((!isUniqueName) && Util.isNotNullOrEmpty(firstName) && firstName.length() >=2 && Util.isNotNullOrEmpty(lastName) ) { //Case:- C
+        sAMAccountName = finalStr(firstName.substring(0,2)+lastName);
+        isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+        System.out.println("######sAMAccountName C :"+sAMAccountName+ "\nisUniqueName : "+isUniqueName);
+
+      }  if ((!isUniqueName) && Util.isNotNullOrEmpty(firstName) && firstName.length() >=3  && Util.isNotNullOrEmpty(lastName) ) { //Case:- E
+        sAMAccountName = finalStr(firstName.substring(0,3) +lastName.substring(0,1));
+        isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+        System.out.println("######sAMAccountName E :"+sAMAccountName+ "\nisUniqueName : "+isUniqueName);
+
+      }  if ((!isUniqueName) && Util.isNotNullOrEmpty(firstName) && Util.isNotNullOrEmpty(lastName) ) { //Case:- D
+        sAMAccountName = finalStr(firstName.substring(0,1) + firstName.substring(firstName.length()-1,firstName.length()) + lastName.substring(0,1)+lastName);
+        isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+        System.out.println("######sAMAccountName D :"+sAMAccountName+ "\nisUniqueName : "+isUniqueName);
+
+      } else { //if all cases are failed then appending numbers to sAMAccountName
+        int count = 1;
+        while (!isUniqueName && Util.isNotNullOrEmpty(sAMAccountName)) {
+          if (sAMAccountName.length() >= 12) {
+            sAMAccountName = sAMAccountName.substring(0,11)+String.valueOf(count);
+            isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+            if (isUniqueName) break;
+            count++;
+          } else {
+            sAMAccountName = sAMAccountName+String.valueOf(count);
+            isUniqueName = isUniqueADName(application, "sAMAccountName",sAMAccountName);
+            if (isUniqueName) break;
+            count++;
+          }
+        }
+      }
+
+    }
+
+
+    return sAMAccountName;
+  }
+
+  public String finalStr(String str) {
+    String finalWord = Util.deleteWhitespace(str.toLowerCase());
+    if(finalWord.length()>12 ){
+      return finalWord.substring(0, 12);
+    }else {
+      return finalWord;
+    }
+    return finalWord;
+  }
+
+  public Boolean isUniqueADName(Application application, String attName, String attValue) {
+
+    if (log.isDebugEnabled()) log.debug("Checking for uniqueness of " + attName + " " + attValue + " for application " + application.getName());
+    Boolean unique = true;
+
+    // Make a copy of the AD application
+    Application appCopy = (Application) application.deepCopy((sailpoint.object.Resolver) context);
+    String appConnName = appCopy.getConnector();
+
+    // Get the domain DN and use this as the searchDN so that we search the entire domain
+    List domainSettings = appCopy.getAttributes().getMap().get("domainSettings");
+    Map searchDNMap = domainSettings.get(0);
+    String searchDN = searchDNMap.get("domainDN");
+    // String searchDN = appCopy.getAttributes().getMap().get("domainSettings").get(0).get("domainDN");
+    if (log.isDebugEnabled()) log.debug("Searching in: " + searchDN);
+
+    List dnList = new ArrayList();
+    Map setupMap = new HashMap();
+    setupMap.put("iterateSearchFilter", "(" + attName  + "=" + attValue + ")");
+    setupMap.put("searchDN", searchDN);
+
+    System.out.println("setupMap==="+setupMap);
+
+    dnList.add(0, setupMap); // This takes the map we just changed and adds it back to the list in place of the map that was there.
+    appCopy.setAttribute("searchDNs", dnList); // Add the list back to the app copy.
+
+    appCopy.setAttribute("referral", "ignore");
+    appCopy.setAttribute("useHasMoreElements", true);
+    appCopy.setCustomizationRule(null);
+
+    Connector appConnector = sailpoint.connector.ConnectorFactory.getConnector(appCopy, null);
+    CloseableIterator iterator = appConnector.iterateObjects(Connector.TYPE_ACCOUNT, null, null);
+
+    System.out.println("iterator==="+iterator.hasNext());
+
+    try {
+      if (iterator != null && iterator.hasNext() ) {
+        if (iterator.hasNext()) {  
+          ResourceObject user = iterator.next();
+          String foundName = user.getAttribute(attName).toString();
+          System.out.println("foundName==="+foundName);
+          if (log.isDebugEnabled()) log.debug("Found an AD account with " + attName + ": " + foundName);        
+          unique = false;
+        }
+      } else {
+        if (log.isDebugEnabled()) log.debug("Could not find an AD account with " + attName + ": " + attValue);
+      }
+    } finally {
+      if ( iterator != null ) iterator.close();
+    }
+    if (log.isDebugEnabled()) log.debug("Unique: " + unique);
+    return unique;
+  }
+
+
+  String result= getsAMAccountName(firstName,middleName,lastName,application);
+
+  return result;
+
+  ]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r Custom Audit" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.server.Auditor;
+
+  import sailpoint.object.AuditEvent;
+
+  import sailpoint.connector.Connector;
+  import org.apache.log4j.Logger;
+  import org.apache.log4j.Level;
+
+
+  import sailpoint.api.*;
+  import sailpoint.object.*;
+  import sailpoint.tools.*;
+
+  Logger log = Logger.getLogger("sailpoint.services.bshdemo");
+  log.setLevel(Level.DEBUG);
+
+  return log.debug("1111111111111111"+Connector.TYPE_ACCOUNT);
+  String action = "customAudit";
+  String source = "rule";
+  String target = "AuditEvent obj";
+  String instance = "null";
+  String accountName = "null";
+  String AttributeName = "operation";
+  String attributeValue = "create event";
+  String string1 = "using some test cases1";
+  String string2 = "using some test cases2";
+  String string3 = "using some test cases3";
+  String string4 = "using some test cases4";
+  String trackingId = "001";
+  String interfac = Source.Rule.toString();
+  //Application application = "IIQ";
+
+  if (! Auditor.isEnabled(action) ) {
+
+    log.debug("# Auditor is NOT Enabled");
+  }
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  AuditEvent event = new AuditEvent();
+  // AuditEvent event =new AuditEvent(String source, String action);
+  // AuditEvent event =new AuditEvent(String source, String action, String target);
+  // AuditEvent event =new AuditEvent(String source, String action, SailPointObject obj);
+  event.setSource(source);
+  event.setTarget(target);
+  event.setAction(action);
+  event.setString1(string1);
+  event.setString2(string2);
+  event.setString3(string3);
+  event.setString4(string4);
+  event.setInterface(interfac);
+
+  
+
+  if (Auditor.isEnabled(action)) {
+    /*
+static public void log(AuditEvent event);
+static public boolean log(String action)
+static public boolean log(String action, String target)
+static public boolean log(String action, String target, String arg1)
+static public boolean log(String action, String target, String arg1, String arg2)
+static public boolean log(String action, String target, String arg1, String arg2,String arg3)
+*/
+    log.debug("# Entering Auditor.log(event);  Audit Rule");
+    Auditor.log(event);
+    context.commitTransaction();
+  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //static public boolean logAs(String actor, String action, String target, String arg1,String arg2, String arg3, String arg4)
+  Boolean logged = Auditor.logAs( source, "foo",  target, string1,string2, null, string4 );
+  if (logged){
+    log.debug("# Logging Enable for customAudit event using logAs() method");
+    context.commitTransaction();
+    // return;
+  }
+  if (!logged){
+    log.debug("# Logging disabled for customAudit event please enable to get AuditLOGS");
+    return;
+  }
+  /////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+  /**
+event.setSource(String sourcce));
+event.setTarget(String target) 
+event.setAction(String action) 
+
+event.setApplication(String app) 
+event.setInstance(String instance) 
+event.setAccountName(String accountName)
+
+event.setAttributeName(String operation)-identitychange or Link change attribyte
+event.setAttributeValue(String Update/create/modify) -identitychange or Link change attribyte values
+
+event.setAttributes(Attributes <String,Object> attire)
+event.setAttribute(String name, Object value)
+
+event.setString1(String string),
+event.setString2(String string),
+event.setString3(String string),
+event.setString4(String string)
+
+
+event.setTrackingId(String trackingId) 
+event.setInterface(String s) 
+
+ */
+  ]]></Source>
+        
+
+</Rule>

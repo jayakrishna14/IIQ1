@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition concurrent="true" name="SP-SPNT-SNOW-INT-ServiceNow-Update-RITM-Status" resultAction="Rename" subType="task_item_type_generic" type="Generic">
+          
+    
+    <Attributes>
+                    
+        
+        <Map>
+                              
+            
+            <entry key="TaskDefinition.runLengthAverage"/>
+                              
+            
+            <entry key="TaskDefinition.runLengthTotal"/>
+                              
+            
+            <entry key="TaskDefinition.runs"/>
+                              
+            
+            <entry key="TaskSchedule.host"/>
+                              
+            
+            <entry key="ruleName" value="SP_SPNT_SNOW_INT_ServiceNow_Task_Rule"/>
+                              
+            
+            <entry key="taskCompletionEmailNotify" value="Disabled"/>
+                              
+            
+            <entry key="taskCompletionEmailRecipients"/>
+                              
+            
+            <entry key="taskCompletionEmailTemplate"/>
+                            
+        
+        </Map>
+                  
+    
+    </Attributes>
+          
+    
+    <Description>Launches custom Task that executes a Rule.</Description>
+          
+    
+    <Owner>
+                    
+        
+        <Reference class="sailpoint.object.Identity" name="spadmin"/>
+                  
+    
+    </Owner>
+          
+    
+    <Parent>
+                    
+        
+        <Reference class="sailpoint.object.TaskDefinition" name="Run Rule"/>
+                  
+    
+    </Parent>
+        
+
+</TaskDefinition>

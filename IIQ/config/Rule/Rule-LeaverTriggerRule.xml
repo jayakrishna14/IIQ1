@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Leaver trigger rule" type="IdentityTrigger">
+          
+    
+    <Description>This rule can be used for Certification Events that use rule triggers. The previousIdentity and newIdentity hold snapshots of the identity before the update has occurred and the state of the identity after the update, respectively.</Description>
+          
+    
+    <Signature returnType="boolean">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="previousIdentity">
+                                        
+                
+                <Description>
+          The identity before the refresh/aggregation (this will be null when an
+          identity is created).
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="newIdentity">
+                                        
+                
+                <Description>
+          The identity after the refresh/aggregation (this will be null when an
+          identity is deleted).
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                    
+        
+        <Returns>
+                              
+            
+            <Argument name="result">
+                                        
+                
+                <Description>
+          A boolean describing the result of the rule.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Returns>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[import sailpoint.object.*;
+  import sailpoint.api.*;
+  import java.util.Date;
+  import java.util.concurrent.TimeUnit;
+
+  if(previousIdentity != null){
+    Date d = previousIdentity.getLastRefresh();
+    Date date = newIdentity.getLastRefresh();
+    long diff = date.getTime() -  d.getTime();
+    long diffInDays = TimeUnit.MILLISECONDS.toDays(diff);
+    System.out.println("out if statement");
+    if( diffInDays >=30 ){
+      return true;
+    }
+  }
+
+    ]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Test-RuleLibrary" type="Validation">
+          
+    
+    <ReferencedRules>
+                    
+        
+        <Reference class="sailpoint.object.Rule" name="RuleLibrary"/>
+                  
+    
+    </ReferencedRules>
+          
+    
+    <Source><![CDATA[
+   
+  return getIdentity("James Smith");
+  
+  return getLink("Group_HR_IT","Betty Young");
+
+  
+  // String str = context.decrypt("1:ACP:sa2295b5PGNiBjKEyFZACelV7aKrgdC+qeQv19MOB3E=");
+  //return str;
+]]></Source>
+        
+
+</Rule>

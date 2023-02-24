@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="AD create" type="Application">
+          
+    
+    <Attributes>
+                    
+        
+        <Map>
+                              
+            
+            <entry key="pageTitle" value="AD create"/>
+                            
+        
+        </Map>
+                  
+    
+    </Attributes>
+          
+    
+    <Section label="Account" name="Account">
+                    
+        
+        <Field displayName="con_prov_policy_ad_objecttype" name="objectType" postBack="true" section="Account" type="string" value="User">
+                              
+            
+            <AllowedValuesDefinition>
+                                        
+                
+                <Value>
+                                                  
+                    
+                    <List>
+                                                            
+                        
+                        <String>User</String>
+                                                            
+                        
+                        <String>Contact</String>
+                                                          
+                    
+                    </List>
+                                                
+                
+                </Value>
+                                      
+            
+            </AllowedValuesDefinition>
+                              
+            
+            <Attributes>
+                                        
+                
+                <Map>
+                                                  
+                    
+                    <entry key="hidden">
+                                                            
+                        
+                        <value>
+                                                                      
+                            
+                            <Script>
+                                                                                
+                                
+                                <Source><![CDATA[
+                    Object objType = field.getValue();    
+                    if ("contact".equalsIgnoreCase(objType)) {
+                    if (form.getSection("Dial-in") != null) {
+                    form.remove(form.getSection("Dial-in"));
+                    }
+                    if (form.getSection("User Details") != null) {
+                    form.remove(form.getSection("User Details"));
+                    }
+                    if (form.getSection("Skype for Business") != null) {
+                    form.remove(form.getSection("Skype for Business"));
+                    } 
+
+                    if (form.getSection("Exchange") != null && form.getSection("Exchange").getFields() != null ) {
+                    for (Object field : form.getSection("Exchange").getFields()) {
+                    String name = field.getName();
+                    if (name != null && name.indexOf(":") > 0 ) {
+                    String[] nameKeys = name.split(":");
+                    if (nameKeys.length > 1 &&
+                    "homeMDB".equalsIgnoreCase(nameKeys[2])){
+                    field.setHidden(true);
+                    }
+                    }
+                    }
+                    }  
+
+                    } else {
+                    if (form.getSection("User Details") != null && form.getSection("User Details").getFields() != null ) {
+                    for (Object field : form.getSection("User Details").getFields()) {
+                    String name = field.getName();
+                    if (name != null && name.indexOf(":") > 0 ) {
+                    String[] nameKeys = name.split(":");
+                    if (nameKeys.length > 1 &&
+                    ("sAMAccountName".equalsIgnoreCase(nameKeys[2]) 
+                    || "password".equalsIgnoreCase(nameKeys[2]))){
+                    field.setRequired(true);
+                    }
+                    }
+                    }
+                    }
+
+                    }
+
+                    return false;
+                  ]]></Source>
+                                                                              
+                            
+                            </Script>
+                                                                    
+                        
+                        </value>
+                                                          
+                    
+                    </entry>
+                                                
+                
+                </Map>
+                                      
+            
+            </Attributes>
+                            
+        
+        </Field>
+                    
+        
+        <Field displayName="con_prov_policy_ad_distinguishedName" helpKey="help_con_prov_policy_ad_distinguishedName" name="distinguishedName" required="true" section="Account" type="string">
+                              
+            
+            <Script>
+                                        
+                
+                <Source><![CDATA[return 
+            "CN="+identity.getName()+","+"OU=People,OU=Demo,DC=Root,DC=domain,DC=name";
+          ]]></Source>
+                                      
+            
+            </Script>
+                            
+        
+        </Field>
+                  
+    
+    </Section>
+          
+    
+    <Section label="User Details" name="User Details">
+                    
+        
+        <Field displayName="con_prov_policy_ad_sAMAccountName" helpKey="help_con_prov_policy_ad_sAMAccountName" name="sAMAccountName" section="User Details" type="string">
+                              
+            
+            <Script>
+                                        
+                
+                <Source><![CDATA[return identity.getName();]]></Source>
+                                      
+            
+            </Script>
+                            
+        
+        </Field>
+                    
+        
+        <Field displayName="con_prov_policy_ad_password" helpKey="help_con_prov_policy_ad_password" name="password" section="User Details" type="secret" value="Password@123"/>
+                    
+        
+        <Field displayName="con_prov_policy_ad_pwdLastSet" helpKey="help_con_prov_policy_ad_pwdLastSet" name="pwdLastSet" section="User Details" type="boolean"/>
+                    
+        
+        <Field displayName="con_prov_policy_ad_IIQDisabled" helpKey="help_con_prov_policy_ad_IIQDisabled" name="IIQDisabled" section="User Details" type="boolean" value="false"/>
+                    
+        
+        <Field displayName="con_prov_policy_ad_primaryGroupDN" helpKey="help_con_prov_policy_ad_primaryGroupDN" name="primaryGroupDN" section="User Details" type="string"/>
+                    
+        
+        <Field displayName="Email" name="mail" type="string">
+                              
+            
+            <Script>
+                                        
+                
+                <Source><![CDATA[return identity.getAttribute("email");]]></Source>
+                                      
+            
+            </Script>
+                            
+        
+        </Field>
+                    
+        
+        <Field displayName="User Principal Name" name="userPrincipalName" type="string">
+                              
+            
+            <Script>
+                                        
+                
+                <Source><![CDATA[return identity.getAttribute("email");]]></Source>
+                                      
+            
+            </Script>
+                            
+        
+        </Field>
+                  
+    
+    </Section>
+          
+    
+    <Section label="General" name="General">
+                    
+        
+        <Field displayName="con_prov_policy_ad_givenName" helpKey="help_con_prov_policy_ad_givenName" name="givenName" section="General" type="string">
+                              
+            
+            <Script>
+                                        
+                
+                <Source><![CDATA[return identity.getFirstname();]]></Source>
+                                      
+            
+            </Script>
+                            
+        
+        </Field>
+                    
+        
+        <Field displayName="con_prov_policy_ad_sn" helpKey="help_con_prov_policy_ad_sn" name="sn" section="General" type="string">
+                              
+            
+            <Script>
+                                        
+                
+                <Source><![CDATA[return identity.getLastname();]]></Source>
+                                      
+            
+            </Script>
+                            
+        
+        </Field>
+                    
+        
+        <Field displayName="con_prov_policy_ad_description" helpKey="help_con_prov_policy_ad_description" name="description" section="General" type="string"/>
+                    
+        
+        <Field displayName="EmployeeID" name="EmployeeID" type="string">
+                              
+            
+            <Script>
+                                        
+                
+                <Source><![CDATA[return identity.getAttribute("EmployeeID");]]></Source>
+                                      
+            
+            </Script>
+                            
+        
+        </Field>
+                  
+    
+    </Section>
+          
+    
+    <Section label="Dial-in" name="Dial-in">
+                    
+        
+        <Field displayName="con_prov_policy_ad_msNPAllowDialin" helpKey="help_con_prov_policy_ad_msNPAllowDialin" name="msNPAllowDialin" section="Dial-in" type="string" value="Not Set">
+                              
+            
+            <AllowedValuesDefinition>
+                                        
+                
+                <Value>
+                                                  
+                    
+                    <List>
+                                                            
+                        
+                        <String>Not Set</String>
+                                                            
+                        
+                        <String>true</String>
+                                                            
+                        
+                        <String>false</String>
+                                                          
+                    
+                    </List>
+                                                
+                
+                </Value>
+                                      
+            
+            </AllowedValuesDefinition>
+                            
+        
+        </Field>
+                    
+        
+        <Field displayName="con_prov_policy_ad_msNPCallingStationID" helpKey="help_con_prov_policy_ad_msNPCallingStationID" multi="true" name="msNPCallingStationID" section="Dial-in" type="string"/>
+                    
+        
+        <Field displayName="con_prov_policy_ad_msRADIUSCallbackNumber" helpKey="help_con_prov_policy_ad_msRADIUSCallbackNumber" name="msRADIUSCallbackNumber" section="Dial-in" type="string"/>
+                    
+        
+        <Field displayName="con_prov_policy_ad_msRADIUSFramedRoute" helpKey="help_con_prov_policy_ad_msRADIUSFramedRoute" multi="true" name="msRADIUSFramedRoute" section="Dial-in" type="string"/>
+                    
+        
+        <Field displayName="con_prov_policy_ad_msRADIUSFramedIPAddress" helpKey="help_con_prov_policy_ad_msRADIUSFramedIPAddress" name="msRADIUSFramedIPAddress" section="Dial-in" type="string"/>
+                  
+    
+    </Section>
+          
+    
+    <Section label="Exchange" name="Exchange">
+                    
+        
+        <Field displayName="con_prov_policy_ad_homeMDB" helpKey="help_con_prov_policy_ad_homeMDB" name="homeMDB" section="Exchange" type="string"/>
+                    
+        
+        <Field displayName="con_prov_policy_ad_mailNickname" helpKey="help_con_prov_policy_ad_mailNickname" name="mailNickname" section="Exchange" type="string"/>
+                    
+        
+        <Field displayName="con_prov_policy_ad_msExchHideFromAddressLists" helpKey="help_con_prov_policy_ad_msExchHideFromAddressLists" name="msExchHideFromAddressLists" section="Exchange" type="boolean"/>
+                    
+        
+        <Field displayName="con_prov_policy_ad_externalEmailAddress" helpKey="help_con_prov_policy_ad_externalEmailAddress" name="exch_externalEmailAddress" section="Exchange" type="string"/>
+                  
+    
+    </Section>
+          
+    
+    <Section label="Skype for Business" name="Skype for Business">
+                    
+        
+        <Field displayName="con_prov_policy_ad_SipAddress" helpKey="help_con_prov_policy_ad_SipAddress" name="SipAddress" section="Skype for Business" type="string"/>
+                    
+        
+        <Field displayName="con_prov_policy_ad_SipDomain" helpKey="help_con_prov_policy_ad_SipDomain" name="SipDomain" section="Skype for Business" type="string"/>
+                    
+        
+        <Field displayName="con_prov_policy_ad_SipAddressType" helpKey="help_con_prov_policy_ad_SipAddressType" name="SipAddressType" section="Skype for Business" type="string">
+                              
+            
+            <AllowedValuesDefinition>
+                                        
+                
+                <Value>
+                                                  
+                    
+                    <List>
+                                                            
+                        
+                        <String>SamAccountName</String>
+                                                            
+                        
+                        <String>FirstLastName</String>
+                                                            
+                        
+                        <String>EmailAddress</String>
+                                                          
+                    
+                    </List>
+                                                
+                
+                </Value>
+                                      
+            
+            </AllowedValuesDefinition>
+                            
+        
+        </Field>
+                    
+        
+        <Field displayName="con_prov_policy_ad_RegistrarPool" helpKey="help_con_prov_policy_ad_RegistrarPool" name="RegistrarPool" section="Skype for Business" type="string"/>
+                  
+    
+    </Section>
+        
+
+</Form>

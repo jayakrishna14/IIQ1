@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="LastEntDel_AcctDel WEBServices beforeProv" type="BeforeProvisioning">
+          
+    
+    <Description>An identityiq82 server-side rule that is executed before the connector's provisioning method is called. This gives the customer the ability to customize or react to anything in the ProvisioningPlan BEFORE it is sent to the underlying connectors used in provisioning. 
+
+    This rule will be called for any application found in a plan that also has a configured 'beforeProvisioningRule' configured.  
+
+    The plan can be updated directly in the rule by reference and does not need to return the plan.</Description>
+          
+    
+    <Signature>
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description>
+          The ProvisioningPlan object on its way to the Connector.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="application">
+                                        
+                
+                <Description>
+          The application object that references this before/after script.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+  System.out.println("plan 1----"+plan.toXml());
+  import sailpoint.object.Identity;
+  import sailpoint.api.*;
+  import java.util.*;
+  import java.util.List;
+  import sailpoint.object.ManagedAttribute;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.*;
+
+  String ide = plan.getNativeIdentity();
+
+  List m = new ArrayList();
+  Identity id = context.getObjectByName(Identity.class,ide);
+  List links = id.getLinks();
+  for(Link li : links)
+  {
+    System.out.println("000000");
+    if(li.getApplicationName().equalsIgnoreCase("WebServices"))
+    {
+      System.out.println("AFTER"+li.getApplicationName().equalsIgnoreCase("WebServices"));
+      m=li.getAttributes().getMap().get("groups");
+      System.out.println("M Value"+m);
+    } 
+  }
+
+  AccountRequest acr = new AccountRequest();
+  List accreq = plan.getAccountRequests();
+  System.out.println("List of account requests is " + accreq);
+  for(int i=0; i<accreq.size(); i++){
+    acr = (AccountRequest)accreq.get(i);
+
+    AttributeRequest attreq = acr.getAttributeRequest("groups");
+
+    if(m.size()==1){
+
+      if (attreq.getOperation().equals(ProvisioningPlan.Operation.Remove)) 
+        acr.setOp(ProvisioningPlan.ObjectOperation.Delete);
+      
+      System.out.println("before provision of WS-"+plan.toXml());
+    }
+
+  }
+
+
+
+
+
+  System.out.println("before provision of WS11111-"+plan.toXml());
+
+  ]]></Source>
+        
+
+</Rule>

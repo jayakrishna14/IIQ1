@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE TaskSchedule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskSchedule lastExecution="1677129425822" name="Check expired mitigations daily" nextExecution="1677177000000">
+          
+    
+    <Arguments>
+                    
+        
+        <Map>
+                              
+            
+            <entry key="executor" value="Check Expired Mitigations"/>
+                              
+            
+            <entry key="nextActualFireTime" value="1677177000000"/>
+                            
+        
+        </Map>
+                  
+    
+    </Arguments>
+          
+    
+    <CronExpressions>
+                    
+        
+        <String>0 0 0 * * ?</String>
+                  
+    
+    </CronExpressions>
+          
+    
+    <Description>Check for expired mitigations every day at midnight.</Description>
+        
+
+</TaskSchedule>

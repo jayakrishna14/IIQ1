@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="NYU-Rule-GoogleAppsExpirationNotice">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.api.SailPointContext;
+  import sailpoint.tools.Util;
+  import sailpoint.object.Link;
+  import sailpoint.object.*;
+  import sailpoint.object.Custom;
+  import sailpoint.object.CustomGlobal;
+  import sailpoint.object.Attributes;
+  import sailpoint.object.ResourceObject;
+  import sailpoint.object.Identity;
+  import sailpoint.object.Workflow;
+  import sailpoint.api.ObjectUtil;
+  import sailpoint.api.IdentityService;
+
+
+  import sailpoint.object.Attributes;
+  import sailpoint.workflow.StandardWorkflowHandler;
+  import sailpoint.request.WorkflowRequestExecutor;
+  import sailpoint.object.Request;
+  import sailpoint.object.RequestDefinition;
+  import sailpoint.api.RequestManager;
+  import sailpoint.task.TaskMonitor;
+  import sailpoint.tools.Message;
+  import sailpoint.tools.Message.Type;
+
+  import java.time.format.DateTimeFormatter;
+  import java.text.SimpleDateFormat;
+  import java.text.DateFormat;
+
+  import java.util.concurrent.TimeUnit;
+  import java.util.Calendar;
+  import java.util.Date;
+  import java.util.Collections;
+  import java.util.List;
+  import java.util.ArrayList;
+  import java.time.LocalDate;
+  import java.time.ZoneId;
+  import java.util.Date;
+  import org.apache.commons.logging.Log;
+  import org.apache.commons.logging.LogFactory;
+  //TaskResult taskResult = new TaskResult();
+
+  TaskMonitor monitor = new TaskMonitor(context, taskResult); 
+
+
+  String passedInRuleConfig = config.get("sendEmail");
+
+  // setting up send or skip emails . leaving null will also skip email
+
+  boolean sendEmails = false;
+
+  if(Util.isNotNullOrEmpty(passedInRuleConfig)){
+    if(passedInRuleConfig.equalsIgnoreCase("yes")){
+      sendEmails = true;
+    }
+    else sendEmails = false;
+  }
+  else {
+    sendEmails = true;
+  }
+
+  void updateProgress(String progressInfo)  
+  {  
+    monitor.reattach(taskResult);    
+    monitor.forceProgress(progressInfo);    
+  } 
+
+  QueryOptions opts = new QueryOptions();  
+  EmailTemplate et = context.getObjectByName(EmailTemplate.class,"NYU-GoogleApps Expiration Template");
+  EmailOptions eo = new EmailOptions();
+
+  //End Dates
+
+
+
+
+
+  taskResult.addMessage("SENDING EMAILS : "+sendEmails);  
+  taskResult.addMessage("Starting to Evaluate non-Former HR Users.");    
+  taskResult.addMessage("Launched By: "+taskResult.getLauncher() );
+  taskResult.addMessage("");
+  updateProgress("Starting to Evaluate non-Former HR Users.");
+
+  try
+  {
+    List filters = new ArrayList();
+    Filter filter = Filter.or(Filter.eq("primaryAffiliationStatus","future"),Filter.eq("primaryAffiliationStatus","current"),Filter.eq("primaryAffiliationStatus","recent"));
+    //filters.add(Filter.and(Filter.eq("primaryAffiliationStatus","future"),Filter.eq("links.application.name","HR")));
+    //filters.add(Filter.and(Filter.eq("primaryAffiliationStatus","current"),Filter.eq("links.application.name","HR")));
+    //filters.add(Filter.and(Filter.eq("primaryAffiliationStatus","recent"),Filter.eq("links.application.name","HR")));
+    filter = Filter.and(filter,Filter.eq("links.application.name","HR"),Filter.notnull("netId"));
+
+    opts.addFilter(filter);
+    opts.setCloneResults(true);
+    totalFoundByFilter = context.countObjects(Identity.class,opts);
+
+    taskResult.addMessage("Processing Google Apps Expiration Notice for Employees ["+totalFoundByFilter+"]  identities ");
+    if ( totalFoundByFilter > 0 ) {
+      SimpleDateFormat baseSDF = new SimpleDateFormat("MM/dd/yyyy");
+
+      Link link = null;
+      List uniqueidList = new ArrayList();
+      Calendar c = Calendar.getInstance();
+      Date currentDate = c.getTime();
+      int count = 0;
+      int totalFoundByFilter = 0;
+      int processedCount = 0;
+      //Header for testing
+      taskResult.addMessage("NetID | Expiry Date | Display Name | DaysDifference");
+      Iterator it = context.search(Identity.class,opts,"id");
+      while ( it!=null && it!=void  &&  it.hasNext() ) {
+        Date hrFinalEndDate = null;
+        String hrEndDate = "";
+        String accessEndDate = "";
+        String accessEndDateOverride = "";
+        String graceEndDate = "";
+        String graceEndDateOverride = "";
+        boolean skipIdentity = false;
+
+        if ( taskResult != null && ( taskResult.isTerminateRequested() || taskResult.isTerminated() ) )
+        {
+          String termMsg = "Terminate Requested. Found ["+count+"] matching criteria. Stopped processing at [" + processedCount + "] of [" + totalFoundByFilter + "]";
+          log.debug( termMsg );
+          taskResult.addMessage(new Message(Message.Type.Warn, termMsg, null)); 
+          break;
+        }
+        processedCount++;
+
+        Object[] obj = it.next();
+        String id = (String) obj[0]; 
+        Identity identity = context.getObjectById(Identity.class,id);
+        IdentityService identityService = new IdentityService(context);
+        Application application = context.getObjectByName(Application.class,"Google Apps");
+        List googleAppLinks = identityService.getLinks(identity,application);
+        if( googleAppLinks == null ) {
+          continue;
+        }else if (googleAppLinks != null && googleAppLinks.size() == 1 && !googleAppLinks.get(0).isDisabled()) {
+
+          if ( identity != null && !uniqueidList.contains(identity.getName())) 
+          {
+            if ( processedCount % 25 == 0 )
+            {
+              updateProgress("Processing [" + processedCount + "] of [" + totalFoundByFilter + "] - identity: "+identity.getAttribute("netId") );
+            }
+
+            uniqueidList.add(identity.getName());
+            List links = identity.getLinks();
+            for ( int i=0;i<links.size();i++ ){
+              Link link = links.get(i);
+              if ( link != null) {
+                String appName = (String) link.getApplicationName();
+
+                if ( appName.equalsIgnoreCase("HR") && link.getAttribute("EMPLOYEE_WORKER") != null && !(link.getAttribute("EMPLOYEE_WORKER").startsWith("W")) ){
+                  accessEndDate = (String) link.getAttribute("ACCESS_END_DATE__c");
+                  accessEndDateOverride = (String) link.getAttribute("ACCESS_END_DATE_OVERRIDE__c");
+                  graceEndDate = (String) link.getAttribute("GRACE_PERIOD_END_DATE__c");
+                  graceEndDateOverride = (String) link.getAttribute("GRACE_PERIOD_END_DATE_OVERRIDE__c");
+                  hrEndDate = calculateHRGraceEnddateFromString(accessEndDate, accessEndDateOverride, graceEndDate, graceEndDateOverride);
+
+                  if (hrEndDate == null)
+                    skipIdentity = true;
+
+                  if( Util.isNotNullOrEmpty(hrEndDate) ){ 
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                    Date date = sdf.parse(hrEndDate);
+                    hrEndDate = sdf.format(date);
+                    hrFinalEndDate = sdf.parse(hrEndDate);
+                  }
+                }
+
+              } 
+            }
+
+            if ( hrFinalEndDate != null && !skipIdentity ){
+              int diff = Util.getDaysDifference(hrFinalEndDate,currentDate);
+              count++;
+              String identNetId = identity.getAttribute("netId");
+              String identDispName = identity.getDisplayName();
+              taskResult.addMessage("AT LINE 185 "+hrFinalEndDate+ "NET ID "+identity.getAttribute("netId"));
+              SimpleDateFormat sdformat = new SimpleDateFormat("E, MMM dd yyyy");
+              String expirydate = sdformat.format(hrFinalEndDate);
+							taskResult.addMessage("Formatted Date : "+expirydate);
+              
+              if ( diff == 14 && identity.getAttribute("email")!=null ){
+                taskResult.addMessage("WHEN THE DATE DIFFERENCE 14 ");
+                eo.setTo(identity.getAttribute("email"));
+                Map args = new HashMap();
+                args.put("expirydate",expirydate);
+                args.put("PreferredFirstName",identity.getFirstname());
+                args.put("netId",identNetId);
+                eo.setVariables(args);
+                if (sendEmails){
+                  context.sendEmailNotification(et,eo);
+                }
+                String userDetailMsg = identNetId+" | "+hrEndDate+" | "+identDispName+" | "+diff;
+                taskResult.addMessage(userDetailMsg);
+                taskResult.addMessage("Finished sending 14 Days Email Remainder to ["+identity.getDisplayName()+"] ");
+              }
+
+              if ( diff == 7 && identity.getAttribute("email")!=null ){
+                taskResult.addMessage("WHEN THE DATE DIFFERENCE 7 ");
+                eo.setTo(identity.getAttribute("email"));
+                Map args = new HashMap();
+                args.put("expirydate",expirydate);
+                args.put("PreferredFirstName",identity.getFirstname());
+                args.put("netId",identNetId);
+                eo.setVariables(args);
+                if (sendEmails){
+                  context.sendEmailNotification(et,eo);
+                }
+                String userDetailMsg = identNetId+" | "+hrEndDate+" | "+identDispName+" | "+diff;
+                taskResult.addMessage(userDetailMsg);
+                taskResult.addMessage("Finished sending 7 Days Email Remainder to ["+identity.getDisplayName()+"] ");
+              }
+
+              if ( diff == 1 && identity.getAttribute("email")!=null ){
+                taskResult.addMessage("WHEN THE DATE DIFFERENCE 1 ");
+                eo.setTo(identity.getAttribute("email"));
+                Map args = new HashMap();
+                args.put("expirydate",expirydate);
+                args.put("PreferredFirstName",identity.getFirstname());
+                args.put("netId",identNetId);
+                eo.setVariables(args);
+                if (sendEmails){
+                  context.sendEmailNotification(et,eo);
+                }
+                String userDetailMsg = identNetId+" | "+hrEndDate+" | "+identDispName+" | "+diff;
+                taskResult.addMessage(userDetailMsg);
+                taskResult.addMessage("Finished sending 1 Day Email Remainder to ["+identity.getDisplayName()+"] ");
+              }
+            }
+          }
+        }
+        if(processedCount == 1000 ) {
+          taskResult.addMessage("WhenThe Count is 1000");
+          break;
+        }
+      }
+    }
+
+  }catch(Exception e){
+    String exceptMsg = "Exception Occurred. Found ["+count+"] matching criteria. Stopped processing at [" + processedCount + "] of [" + totalFoundByFilter + "] Exception: \n"+e.getMessage();
+    log.error( exceptMsg );
+    taskResult.addMessage(new Message(Message.Type.Error, exceptMsg, null)); 
+  }
+
+
+
+  ]]></Source>
+        
+
+</Rule>

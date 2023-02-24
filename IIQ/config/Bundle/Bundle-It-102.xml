@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Bundle PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Bundle displayName="IT-102" name="IT-102" type="it">
+          
+    
+    <Attributes>
+                    
+        
+        <Map>
+                              
+            
+            <entry key="sysDescriptions">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Map>
+                                                            
+                        
+                        <entry key="en_US" value="Desciption for IT-102"/>
+                                                          
+                    
+                    </Map>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                            
+        
+        </Map>
+                  
+    
+    </Attributes>
+          
+    
+    <Owner>
+                    
+        
+        <Reference class="sailpoint.object.Identity" name="abel.tuter"/>
+                  
+    
+    </Owner>
+          
+    
+    <Profiles>
+                    
+        
+        <Profile>
+                              
+            
+            <ApplicationRef>
+                                        
+                
+                <Reference class="sailpoint.object.Application" name="Service Now"/>
+                                      
+            
+            </ApplicationRef>
+                              
+            
+            <Constraints>
+                                        
+                
+                <Filter operation="CONTAINS_ALL" property="roles">
+                                                  
+                    
+                    <Value>
+                                                            
+                        
+                        <List>
+                                                                      
+                            
+                            <String>user</String>
+                                                                    
+                        
+                        </List>
+                                                          
+                    
+                    </Value>
+                                                
+                
+                </Filter>
+                                      
+            
+            </Constraints>
+                            
+        
+        </Profile>
+                    
+        
+        <Profile>
+                              
+            
+            <ApplicationRef>
+                                        
+                
+                <Reference class="sailpoint.object.Application" name="Active Directory"/>
+                                      
+            
+            </ApplicationRef>
+                              
+            
+            <Constraints>
+                                        
+                
+                <Filter operation="CONTAINS_ALL" property="memberOf">
+                                                  
+                    
+                    <Value>
+                                                            
+                        
+                        <List>
+                                                                      
+                            
+                            <String>NetBIOS\Admins</String>
+                                                                    
+                        
+                        </List>
+                                                          
+                    
+                    </Value>
+                                                
+                
+                </Filter>
+                                      
+            
+            </Constraints>
+                            
+        
+        </Profile>
+                  
+    
+    </Profiles>
+        
+
+</Bundle>

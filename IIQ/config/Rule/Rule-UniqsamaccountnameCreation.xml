@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="UniqSamAccountName Creation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.Filter.CompositeFilter;
+  import sailpoint.object.GroupDefinition;
+  
+  String firstName = "Abcdefgh";
+  String lastName = "Zyxwvuts";
+  String username = "";
+    
+  if(lastName != null){
+    for(int i=0; i<
+    
+  
+  ]]></Source>
+        
+
+</Rule>

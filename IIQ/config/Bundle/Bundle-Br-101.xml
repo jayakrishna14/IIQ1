@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Bundle PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Bundle displayName="BR-101" name="BR-101" type="business">
+          
+    
+    <Attributes>
+                    
+        
+        <Map>
+                              
+            
+            <entry key="Department" value="Department for BR-101"/>
+                              
+            
+            <entry key="sysDescriptions">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Map>
+                                                            
+                        
+                        <entry key="en_US" value="Desciption for BR-101"/>
+                                                          
+                    
+                    </Map>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                            
+        
+        </Map>
+                  
+    
+    </Attributes>
+          
+    
+    <Owner>
+                    
+        
+        <Reference class="sailpoint.object.Identity" name="spadmin"/>
+                  
+    
+    </Owner>
+          
+    
+    <Requirements>
+                    
+        
+        <Reference class="sailpoint.object.Bundle" name="IT-101"/>
+                    
+        
+        <Reference class="sailpoint.object.Bundle" name="IT-102"/>
+                  
+    
+    </Requirements>
+        
+
+</Bundle>

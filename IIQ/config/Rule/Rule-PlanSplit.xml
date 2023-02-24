@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="plan split" type="Validation">
+          
+    
+    <Source><![CDATA[
+  
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+   
+  ProvisioningPlan plan2 = new ProvisioningPlan();
+  if(plan != null){
+    List acReq = plan.getAccountRequests();
+    for(int i=0; i<acReq.size(); i++){
+      AccountRequest ar = (AccountRequest) acReq.get(i);
+      List atrreq = ar.getAttributeRequests();
+      for(int j=1; j<atrreq.size(); j++){
+        
+        if(j != 1){
+          AttributeRequest at = (AttributeRequest) atrreq.get(j);
+          plan2.setNativeIdentity(plan.getNativeIdentity());
+          plan2.setTargetIntegration(plan.getTargetIntegration());
+          AccountRequest acr = new AccountRequest();
+          acr.setApplication(plan.getApplication());
+          acr.setNativeIdentity(plan.getNativeIdentity());
+          acr.setOp(ar.getOperation());
+          acr.add(at);
+          plan2.add(acr);
+          ar.remove(at);
+        }
+      }
+    }
+  }
+                    
+          
+  ]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="ad" type="Role">
+          
+    
+    <ApplicationRef>
+                    
+        
+        <Reference class="sailpoint.object.Application" name="XHR-Authoritative"/>
+                  
+    
+    </ApplicationRef>
+          
+    
+    <Attributes>
+                    
+        
+        <Map>
+                              
+            
+            <entry key="pageTitle" value="ad"/>
+                            
+        
+        </Map>
+                  
+    
+    </Attributes>
+          
+    
+    <Description/>
+        
+
+</Form>

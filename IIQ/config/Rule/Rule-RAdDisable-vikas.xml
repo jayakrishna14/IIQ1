@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r AD Disable-vikas" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.Filter;
+  import sailpoint.object.Identity;
+  import sailpoint.object.Link;
+  import sailpoint.object.QueryOptions;
+  import sailpoint.object.Custom;
+  import sailpoint.object.Attributes;
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.tools.GeneralException;
+  import sailpoint.tools.Util;
+  import saiopoint.util.*;
+  import java.util.Date;
+  import java.text.SimpleDateFormat;
+  import org.apache.log4j.Logger;
+  import org.apache.log4j.Level;
+
+  boolean flag=false;
+
+  Logger log = Logger.getLogger("sailpoint.services.bshdemo");
+  log.setLevel(Level.DEBUG);
+
+  QueryOptions op=new QueryOptions();
+  Filter f = Filter.or(Filter.eq("application.name","Active Directory"));
+  op.addFilter(f);
+
+  List its=context.getObjects(Link.class,op);
+
+  for(Link it:its){
+    Link li=it;
+    String inputDateString=	(String) li.getAttribute("lastLogon");
+    SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+    Date  appLastLogin = formatter.parse(inputDateString);
+
+    int j =(int)Util.getDaysDifference(new Date(),appLastLogin);
+
+    if(j == 2 ){
+      WorkflowLaunch wflaunch = new WorkflowLaunch();
+
+      HashMap launchArgsMap = new HashMap();
+      launchArgsMap.put("applicationName",li.getApplicationName());
+      launchArgsMap.put("identityDisplayName",li.getIdentity().getName());
+      launchArgsMap.put("identityName",li.getIdentity().getName());
+      launchArgsMap.put("nativeIdentity",li.getNativeIdentity());
+      launchArgsMap.put("operation","Disable");
+
+      Workflow wfn = context.getObjectByName(Workflow.class, "w fromRule");
+
+      if (wfn != null)
+      {
+        wflaunch.setWorkflowName(wfn.getName());
+        wflaunch.setWorkflowRef(wfn.getName());      
+        wflaunch.setVariables(launchArgsMap);
+        Workflower workflower = new Workflower(context);
+        WorkflowLaunch launch = workflower.launch(wflaunch);
+      }
+    }
+  }
+
+  ]]></Source>
+        
+
+</Rule>

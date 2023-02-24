@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="split plan" type="BeforeProvisioning">
+          
+    
+    <Description>An identityiq82 server-side rule that is executed before the connector's provisioning method is called. This gives the customer the ability to customize or react to anything in the ProvisioningPlan BEFORE it is sent to the underlying connectors used in provisioning.
+
+    This rule will be called for any application found in a plan that also has a configured 'beforeProvisioningRule' configured.  
+
+    The plan can be updated directly in the rule by reference and does not need to return the plan.</Description>
+          
+    
+    <Signature>
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description>
+          The ProvisioningPlan object on its way to the Connector.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="application">
+                                        
+                
+                <Description>
+          The application object that references this before/after script.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.*;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+
+  if(plan != null){
+    int iterateCount = 0;
+    List list = new ArrayList();
+    List acReq = plan.getAccountRequests();
+
+    for(int i=0; i<acReq.size(); i++) {
+
+      AccountRequest ar = (AccountRequest) acReq.get(i);
+      List atrreq = ar.getAttributeRequests("memberOf");
+      //Creating separate Plans
+      if (sailpoint.tools.Util.nullSafeSize(atrreq) > 1) {
+
+        for (int extraPlan = 0;extraPlan<atrreq.size(); extraPlan++) {
+          AttributeRequest at = (AttributeRequest) atrreq.get(extraPlan);
+          ProvisioningPlan extraPlan = new ProvisioningPlan();
+          extraPlan.setNativeIdentity(plan.getNativeIdentity());
+          extraPlan.setTargetIntegration(plan.getTargetIntegration());
+          AccountRequest acr = new AccountRequest();
+          acr.setApplication(application.getName().toString());
+          acr.setNativeIdentity(plan.getNativeIdentity());
+          acr.setOperation(ar.getOperation());
+          acr.add(at);
+          extraPlan.add(acr);
+          list.add(extraPlan);
+
+        }
+
+      }
+
+    }
+    //Removing AttributeRequests
+    if (sailpoint.tools.Util.nullSafeSize(list) > 0) {
+
+      for(int i=0; i<acReq.size(); i++) {
+        AccountRequest ar = (AccountRequest) acReq.get(i);
+        List atrreq = ar.getAttributeRequests("memberOf");
+        for (int j = 1;j<atrreq.size();j++) {
+          ar.remove(atrreq.get(j));
+        }
+      }
+      //Printing List and Plans to confirm
+      System.out.println("=======The List of  Plans "+list);
+      int count = 1;
+      for (ProvisioningPlan plan : list) {
+
+        System.out.println("=======The Extra Plan "+count+ " : "+plan.toXml());
+        count++;
+      }
+    }
+
+  }
+
+  ]]></Source>
+        
+
+</Rule>

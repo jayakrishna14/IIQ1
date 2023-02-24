@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r remove_sticy_entitlements" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.Identity;
+  import java.util.List;
+  import sailpoint.object.AttributeAssignment;
+  import sailpoint.api.Provisioner;
+
+  public ProvisioningPlan removeAttributeAssignment(Identity identityCube, ProvisioningPlan plan)
+  {
+    if (identityCube != null && plan != null)
+    {
+      String identityName = identityCube.getName();
+      System.out.println("WF-LEV-01:: Entered removeAttributeAssignment for Identity : " + identityName);
+      List attAssignments = identityCube.getAttributeAssignments();
+      if (attAssignments != null && !attAssignments.isEmpty())
+      {
+        String applicationName;
+        String nativeIdentity;
+        String attName;
+        String attValue;
+        for (AttributeAssignment attAssignment : attAssignments)
+        {
+          AccountRequest accReq = new AccountRequest();
+          applicationName = attAssignment.getApplicationName();
+          nativeIdentity = attAssignment.getNativeIdentity();
+          attName = attAssignment.getName();
+          attValue = attAssignment.getValue();
+          // Skip attribute removal if illformed or is of type Rule
+          if (applicationName != null && nativeIdentity != null && attName !=null)
+          {
+            System.out.println("WF-LEV-02:: Attribute Change details : ");
+            System.out.println("WF-LEV-03:: Attribute Name : " + attName);
+            System.out.println("WF-LEV-04:: Attribute Value : " + attValue);
+            System.out.println("WF-LEV-05:: Application Name : " + applicationName);
+
+            accReq.setApplication(applicationName);
+            accReq.setNativeIdentity(nativeIdentity);
+            accReq.setOp(sailpoint.object.ProvisioningPlan.ObjectOperation.Modify);
+            AttributeRequest attReqEntAss = new AttributeRequest();
+            attReqEntAss.setName(attName);
+            attReqEntAss.setValue(attValue);
+            attReqEntAss.put("assignment", "true");
+            attReqEntAss.setOp(ProvisioningPlan.Operation.Remove);
+            accReq.add(attReqEntAss);
+            plan.add(accReq);
+            System.out.println("WF-LEV-05:: Application Name : " + applicationName);
+          } else
+          {
+            System.out.println("WF-LEV-07:: Illformed AttributeAssignment. Please check user : " + identityName);
+          }
+        }
+      }
+    }
+    System.out.println("WF-LEV-08:: Final Plan returned by method removeAttributeAssignment : " + plan.toXml());
+    return plan;
+  }
+ // Identity id=context.getObjectByName(Identity.class,"abel.tuter");
+  Identity id=context.getObjectByName(Identity.class,"abraham.lincoln");
+  ProvisioningPlan plan=new ProvisioningPlan();
+  plan.setIdentity( id);
+  Provisioner pro =new Provisioner(context);
+  pro.execute(removeAttributeAssignment(id,plan));
+  ]]></Source>
+        
+
+</Rule>

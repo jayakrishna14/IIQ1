@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r Create-Provision JDBC" type="JDBCOperationProvisioning">
+          
+    
+    <Description>This rule is used by the JDBC connector to do provisioning of the data .</Description>
+          
+    
+    <Signature returnType="ProvisioningResult"/>
+          
+    
+    <Source><![CDATA[import java.sql.ResultSet;
+  import java.sql.Statement;
+  import java.sql.Connection;
+  import java.sql.DriverManager;
+  import java.sql.Types;
+  import sailpoint.api.SailPointContext;  
+  import sailpoint.object.Identity;
+  import sailpoint.object.*;  
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import oracle.jdbc.OracleTypes;
+  import java.sql.PreparedStatement;
+  import java.sql.SQLException;
+  import java.sql.Date;
+  import sailpoint.object.PasswordPolicy;
+  import sailpoint.api.PasswordGenerator;
+  import sailpoint.object.ProvisioningResult;
+  public String getAttributeRequestValue(AccountRequest acctReq, String attribute) {
+    if ( acctReq != null ) {
+      AttributeRequest attrReq = acctReq.getAttributeRequest(attribute);
+      if ( attrReq != null ) {
+        return attrReq.getValue();
+      }
+    }
+    return null;
+  }
+  ProvisioningResult provresult = new ProvisioningResult();
+  String user = " ";
+  String username = " ";
+  String emplID = " ";
+  String networkID=" ";
+
+  System.out.println("calling create ");
+  if ( plan != null ) {
+    System.out.println("accRequests ProvisioningPlan:\n" + plan.toXml());
+    List accRequests = plan.getAccountRequests(); 
+    if ( ( accRequests != null ) && ( accRequests.size() > 0 ) ) {
+      for(AccountRequest accRequest : accRequests) {
+        user = plan.getNativeIdentity();
+        Identity identity = context.getObjectByName(Identity.class, user);
+        emplID = identity.getAttribute("EmployeeID");
+        username = identity.getDisplayName();
+        networkID=identity.getAttribute("NetworkID");
+
+        try{
+          if(AccountRequest.Operation.Create.equals(accRequest.getOperation())) {
+            List attrReqs = accRequest.getAttributeRequests();
+            if(attrReqs.size() > 0){
+              for(int i=0; i<attrReqs.size(); i++){
+              	AttributeRequest at = (AttributeRequest)attrReqs.get(i);
+            String query ="INSERT INTO test.jdbcusers VALUES(?,?,?,?,?,?,?)";
+            PreparedStatement st = connection.prepareStatement(query);
+            st.setString(1, username);
+            st.setString(2, identity.getFirstname());
+            st.setString(3, identity.getLastname());
+            st.setString(4,emplID);
+            st.setString(5, identity.getAttribute("email"));
+            st.setString(6,networkID);
+            //AttributeRequest attrReq = accRequest.getAttributeRequest("GroupId");
+            st.setString(7,  at.getValue());
+        
+            st.executeUpdate();
+
+
+            provresult.setStatus(ProvisioningResult.STATUS_COMMITTED);
+            }
+          
+            System.out.println("JDBC Application- Create User Result is " +provresult);
+            System.out.println("plan in create rule" +plan.toXml());
+
+          }
+        }
+        }catch (Exception e) {
+          System.out.println("JDBCApplication Create Error e: " +e.getMessage());    
+        }finally { 
+
+          try{ 
+            if (connection != null) 
+              connection.close(); 
+          }catch (SQLException e) { 
+            e.printStackTrace(); 
+          } 
+        }      
+      }  
+    }
+  }
+
+  return provresult;
+  ]]></Source>
+        
+
+</Rule>

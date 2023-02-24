@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r AD Before Prov Rule" type="BeforeProvisioning">
+          
+    
+    <Source><![CDATA[
+  import java.util.ArrayList;
+  import java.util.List;
+  import org.apache.log4j.Logger;
+  import sailpoint.object.Attributes;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.ProvisioningPlan.Operation;
+  import sailpoint.object.ProvisioningPlan.AccountRequest.Operation;
+  import sailpoint.object.ProvisioningPlan.ObjectOperation;
+  import sailpoint.object.ProvisioingProject;
+  import sailpoint.object.Custom;
+  import sailpoint.object.Application;
+  import sailpoint.object.Bundle;
+  import sailpoint.tools.Util;
+  import sailpoint.api.IdentityService;
+  import sailpoint.object.Filter.LeafFilter;
+  import sailpoint.object.Filter;
+  import sailpoint.object.Identity;
+  import sailpoint.object.Link;
+  import sailpoint.api.SailPointContext;
+  import sailpoint.tools.GeneralException;
+
+
+  List accountRequestsToRemove = new ArrayList();
+
+  List permissionList = new ArrayList();
+  ProvisioningPlan.Operation operation;
+  List newAcctReqs = new ArrayList();
+  StringBuilder finalString = new StringBuilder();
+  String separator = ";";
+  String finValue = "";
+  Object value ="";
+
+
+  if(plan != null){
+    log.error("plan" +plan.toXml());
+    List accReqs = plan.getAccountRequests();
+    if(accReqs!=null) {
+      for(AccountRequest acr : accReqs) {
+        if(acr.getOperation().toString().equalsIgnoreCase("Create")) {
+          String nativeId = acr.getNativeIdentity();
+          Identity id = plan.getIdentity();
+          List apps = new ArrayList();
+          apps.add(application);
+          IdentityService ids = new IdentityService(context);
+          if(ids.hasAccounts(id, apps)){
+            List links = ids.getLinks(id,app);
+            Link link = links.get(0);
+            acr.setNativeIdentity(link.getNativeIdentity());
+            acr.setOperation(ProvisioningPlan.AccountRequest.Operation.Modify);
+          } else {
+
+            //Adding Attribute Request of User_Group__c if PublicGroups is not null ...
+            List publicGroupAttrReqs = acr.getAttributeRequests("memberOf");
+            if (Util.nullSafeSize(publicGroupAttrReqs) > 0) {
+              StringBuilder userGroupCValues = new StringBuilder();
+              for (int i=0;i<publicGroupAttrReqs.size();i++) {
+                AttributeRequest publicGroupAttrReq = publicGroupAttrReqs.get(i);
+                if (publicGroupAttrReq != null) {
+                  userGroupCValues.append(publicGroupAttrReq.getValue());
+                }
+                if (i != publicGroupAttrReqs.size()-1) userGroupCValues.append(";");
+              }
+              System.out.println("---- The Group Values : "+userGroupCValues.toString());
+              if (Util.isNotNullOrEmpty(userGroupCValues.toString())) {
+                acr.add(new AttributeRequest("department",ProvisioningPlan.Operation.Add,userGroupCValues.toString()));
+                System.out.println("----IN IF  : "+acr.toXml());
+              }
+            }
+          }
+        }
+      }
+    }
+    System.out.println("----PLAN  : "+plan.toXml());
+  }
+  return plan;
+  ]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r JDBCOperationProvisioning_create" type="JDBCOperationProvisioning">
+          
+    
+    <Description>This rule is used by the JDBC connector to do provisioning of the data .</Description>
+          
+    
+    <Signature returnType="ProvisioningResult">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="application">
+                                        
+                
+                <Description>The application whose data file is being processed.</Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="schema">
+                                        
+                
+                <Description>The Schema currently in use.</Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="connection">
+                                        
+                
+                <Description>A connection object to connect to database.</Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description>The ProvisioningPlan created against the JDBC application.</Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="request">
+                                        
+                
+                <Description>The ProvisioningRequest created against the JDBC application.</Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                    
+        
+        <Returns>
+                              
+            
+            <Argument name="result">
+                                        
+                
+                <Description>A Provisioning Result object is desirable to return the status.IT can be a new object or part of  Provisioning Plan</Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Returns>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.Identity;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import oracle.jdbc.OracleTypes;
+  import java.sql.PreparedStatement;
+  import java.sql.SQLException;
+  import sailpoint.object.ProvisioningResult;
+
+  ProvisioningResult provresult = new ProvisioningResult();
+
+  print("starting plan\n"+plan.toXml());
+  AccountRequest req=  plan.getAccountRequests().get(0);
+ /* String mail =req.getNativeIdentity();
+   String mail =(String) req.getAttributeRequest("EMAIL").getValue();
+  String eid =(String) req.getAttributeRequest("EMPID").getValue();
+  String fn =(String) req.getAttributeRequest("FIRSTNAME").getValue();
+  String ln =(String) req.getAttributeRequest("LASTNAME").getValue();
+  String name =(String) req.getAttributeRequest("NAME").getValue();
+  String dep =(String) req.getAttributeRequest("DEPARTMENT").getValue();
+*/
+  String query ="INSERT INTO oracle_users VALUES(?,?,?,?,?,?)";
+  // insert into oracle_users values('1','2','3','4','5','6');
+  
+  PreparedStatement st = connection.prepareStatement(query);
+  st.setString(1, eid );
+  st.setString(2, name );
+  st.setString(3, fn);
+  st.setString(4,ln);
+  st.setString(5,mail);
+  st.setString(6, dep);
+
+  st.executeUpdate();
+  print("33333333");
+  provresult.setStatus(ProvisioningResult.STATUS_COMMITTED);
+  print("44444444444");
+  return provresult;
+  ]]></Source>
+        
+
+</Rule>

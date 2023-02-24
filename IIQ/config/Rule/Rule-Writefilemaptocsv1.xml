@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="WriteFileMaptoCSV1">
+          
+    
+    <Source><![CDATA[
+
+
+  import sailpoint.api.*;
+  import sailpoint.object.*;
+  import java.util.*;
+  import java.text.*;
+  import java.nio.charset.StandardCharsets;
+  import java.nio.file.Paths;
+  import java.nio.file.Files;
+  import sailpoint.tools.Util;
+  import java.util.stream.*;
+
+  List list = new ArrayList();
+  String output;
+  boolean header = true;
+  Map globalMap = new HashMap();
+  Map lastmap = null;
+
+  List lines = Files.readAllLines(Paths.get("C:\\Sailpoint\\mapToCSV.csv"), StandardCharsets.UTF_8);
+
+  if (null != lines && !lines.isEmpty()) {
+    for (String line : lines) {
+      if(header)
+      {
+        header=false;
+        continue;
+      } 
+      List columns = Util.csvToList(line);
+      if (4 == columns.size()) {
+        String personnalID = columns.get(1);
+
+        if (globalMap.get(personnalID) == null) {
+          SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy");
+          Date date = sdf.parse(columns.get(2));
+          Map valueMap = new HashMap();
+          valueMap.put("line",line);
+          valueMap.put("endDate", date);
+          globalMap.put(personnalID, valueMap); 
+          System.out.println("------globalMap"+globalMap);
+
+        } else {
+          Set keys = globalMap.keySet();
+          List listKeys = keys.stream().collect(Collectors.toList());
+          System.out.println("listKeys-"+listKeys);
+          if(listKeys.contains(personnalID)){
+            System.out.println("****"+personnalID);
+            Map map = globalMap.get(personnalID);
+            Date endD = map.get("endDate");
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy");
+            Date date = sdf.parse(columns.get(2));
+            if(Util.isDateAfter(date,endD)){
+              map.put("endDate", date);
+              map.put("line", line);
+              globalMap.put(personnalID,map);
+              System.out.println("1111111111"+globalMap);
+            }
+          }
+
+        }
+      }
+
+    }   
+
+  }
+  output = "Name,Personnel_ID,End_Date,Nick"+"\n";
+  for(String key :globalMap.keySet()){
+    output = output + "\n" +globalMap.get(key).get("line");
+  }
+
+  return  new ByteArrayInputStream(output.getBytes());
+
+
+
+
+
+
+
+
+
+  ]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="List of Entitlements to identity">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.Application;
+  import sailpoint.api.SailPointContext;
+  import sailpoint.object.Filter;
+  import sailpoint.object.Link;
+  import sailpoint.workflow.WorkflowContext;
+  import sailpoint.object.Workflow;
+  import java.util.ArrayList;
+  import java.util.List;
+  import java.util.Map;
+  import java.util.HashMap;
+  import sailpoint.object.Identity;
+  import sailpoint.object.ManagedAttribute;
+  import sailpoint.api.Provisioner; 
+  import sailpoint.tools.GeneralException;
+  import sailpoint.tools.Util;
+  import sailpoint.object.Custom;
+  import sailpoint.api.IdentityService;
+  import sailpoint.object.*;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.ProvisioningPlan.Operation;
+
+
+  public boolean isValidateInputs(WorkflowContext wfcontext,SailPointContext context,Map inputMap){
+    System.out.println("inside is validate inputs method");
+
+    String iidentityName = inputMap.get("identityName");
+    Filter filter = Filter.and(Filter.eq("displayName",iidentityName),Filter.eq("inactive",false));
+    Identity identity = context.getUniqueObject(Identity.class,filter);
+    if(identity == null){
+      wfcontext.setVariable("errorStr","the given identity doesn't exist - ");
+      return false;
+    }
+    if(identity != null){
+      System.out.println("the identity is available:"+ identity);
+      return true;
+    }
+
+  }
+
+  public String addIdentityToGroup(WorkflowContext wfcontext,SailPointContext context,Map inputMap){
+    System.out.println("inside is addIdentityToGroup method");
+    List entitlementList = new ArrayList();
+    String appName = "";
+    String applicationName = "";
+    String managedAttrvalue="";
+    String iidentityName = inputMap.get("identityName");
+    System.out.println("identityName: "+ iidentityName);
+    String nativeIdentity = null;  
+
+
+    Filter filter = Filter.and(Filter.eq("displayName",iidentityName),Filter.eq("inactive",false));
+    Identity identity = context.getUniqueObject(Identity.class,filter);
+    if(identity!=null)
+    {
+      List links = identity.getLinks();
+      for(Link link : links){
+        if(link!=null){
+          applicationName = link.getApplicationName();
+          if(applicationName!=null && applicationName.equalsIgnoreCase("AD")){
+            appName = applicationName;
+            nativeIdentity = link.getNativeIdentity();
+            System.out.println("the application Name: "+ appName);
+
+          }
+        }
+      }
+      String groupNames = inputMap.get("entitlement");
+      if(groupNames!=null){
+
+        System.out.println("groupNames are: "+ groupNames);
+
+        String[] entitlementArray = groupNames.split(",");
+        entitlementList = Arrays.asList(entitlementArray);
+      }
+    }
+    for(String entitlements :entitlementList){
+
+      Filter f=Filter.eq("displayName",entitlements);
+      ManagedAttribute managedAttribute = context.getUniqueObject(ManagedAttribute.class,f);
+      if(managedAttribute!=null){
+        managedAttrvalue= managedAttribute.getValue();
+        System.out.println("the managedAttrvalue value: "+ managedAttrvalue);
+      }
+
+
+      ProvisioningPlan plan = new ProvisioningPlan();
+      if(plan != null){
+
+        plan.setIdentity(identity);
+
+        AccountRequest accReq = new AccountRequest();
+        accReq.setApplication(appName);
+        accReq.setOp(ProvisioningPlan.ObjectOperation.Modify);
+        accReq.setNativeIdentity(nativeIdentity);
+
+        accReq.add(new AttributeRequest("memberOf", ProvisioningPlan.Operation.Add,managedAttrvalue));
+
+
+        plan.add(accReq);
+        System.out.println("inside plan: "+ plan.toXml());
+
+      }
+
+
+
+
+      try{
+
+        Provisioner provisioner = new Provisioner(context);
+        provisioner.execute(plan);
+        context.saveObject(identity);
+        context.commitTransaction();
+      }
+
+
+      catch(GeneralException e){
+        return "error while adding entitlement" +e.getMessage();
+      }
+
+    }
+    return null;	
+  }
+  ]]></Source>
+        
+
+</Rule>

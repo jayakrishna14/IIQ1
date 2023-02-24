@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="EmailOptions Rule" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.Custom;
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+
+  if(plan != null){
+    Custom cus = context.getObjectByName(Custom.class,"Custom Object");
+    Attributes attr = cus.getAttributes();
+    List keyNames = new ArrayList();
+    Map teMap = attr.getMap();
+    Set set = teMap.keySet();
+    for(String str: set){
+      keyNames.add(str);
+    }
+    String etemp ="";
+    EmailOptions eo = null;
+    List emailRec =new ArrayList();
+    List list = new ArrayList();
+    Map args = new HashMap();
+
+    List acreqs = plan.getAccountRequests();
+    for(int i=0; i<acreqs.size(); i++){
+      AccountRequest ar = (AccountRequest)acreqs.get(i);
+      List atreqs = ar.getAttributeRequests();
+      for(int j=0; j<atreqs.size(); j++){
+        AttributeRequest atr = (AttributeRequest)atreqs.get(j);
+        boolean bool=keyNames.contains(atr.getValue().toString());
+        System.out.println("Boolean Value :"+bool);
+
+        if(bool){
+          list = cus.get(atr.getValue());  
+          etemp = cus.get("EmailTemplate");
+          EmailOptions eo = null;
+          for(String s : list){
+            Identity id = context.getObjectByName(Identity.class,s);
+            emailRec.add(id.getAttribute("email"));
+            args.put("ownerName","spadmin");
+            eo = new EmailOptions(emailRec,args);
+            eo.setSendImmediate(true);
+            eo.setNoRetry(true);
+          }
+          if(eo != null){
+            EmailTemplate et = context.getObjectByName(EmailTemplate.class,etemp);
+            context.sendEmailNotification(et,eo);
+          }
+        }  
+      }
+    }
+  }
+  return plan;
+  ]]></Source>
+        
+
+</Rule>

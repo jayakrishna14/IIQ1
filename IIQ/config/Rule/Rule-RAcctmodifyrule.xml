@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r acctModifyRule">
+          
+    
+    <Signature returnType="ProvisioningResult">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description> The Provisioning Plan </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="filePath">
+                                        
+                
+                <Description> application filePath </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[ 
+  import java.io.BufferedReader;
+  import java.io.BufferedWriter;
+  import java.io.FileReader;
+  import java.io.FileWriter;
+  import java.io.IOException;
+  import java.util.List;
+
+  import sailpoint.api.SailPointContext;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.ProvisioningResult;
+
+  ProvisioningResult proResult = new ProvisioningResult();
+
+  System.out.println(">>>> Entering to the SAILPOINT modify rule");
+  public  write(String data) throws IOException {
+    System.out.println(">>>> Entering to the  write method");
+    String strFile = "D:\\\\Sailpoint\\\\connectors_CSV\\\\Demo.csv";
+    BufferedWriter bw = new BufferedWriter(new FileWriter(strFile));
+    bw.write(data);
+    bw.close();
+
+
+    proResult.setStatus(ProvisioningResult.STATUS_COMMITTED);
+    return proResult;
+  }
+
+  public  add(String value,String idName) {
+    System.out.println(">>>> Entering to the  ADD method");
+    try {
+      String strFile = "D:\\\\Sailpoint\\\\connectors_CSV\\\\Demo.csv";
+      BufferedReader br = new BufferedReader(new FileReader(strFile));
+      String one = "", two = "\"", strLine = "", data = "";
+
+      while ((strLine = br.readLine()) != null) {
+
+        if (strLine.contains(idName)) {
+          if ((strLine.contains("\""))) {
+            String[] str = strLine.split("\"");
+            for (String s : str) {
+              if (s.length() > 30) {
+                one = one + s;
+              } else {
+                two = two + s.concat("," + value + "\"");
+              }
+            }
+            data = data + one + two + "\n";
+          } else {
+            data = data + strLine + "\"" + value + "\"" + "\n";
+          }
+        } else {
+          data = data + strLine + "\n";
+        }
+
+      }
+
+      System.out.println(data);
+      write(data);
+      br.close();
+
+    } catch (Exception e) {
+      System.out.println("EXCEPTON OCCURED >>> " + e.getLocalizedMessage());
+    }
+
+  }
+  public  remove(String value,String idName) throws IOException {
+    System.out.println(">>>> Entering to the  REMOVE method");
+    String strFile = "D:\\\\Sailpoint\\\\connectors_CSV\\\\Demo.csv";
+    BufferedReader br = new BufferedReader(new FileReader(strFile));
+    String one = "", two = "", strLine = "", data = "";
+
+    while ((strLine = br.readLine()) != null) {
+
+      if (strLine.contains(idName)) {
+        String[] str = strLine.split("\"");
+        for (String s : str) {
+          if (s.length() > 30) {
+            one = one + s;
+          } else {
+
+            String s1 = s.replace(value, "");
+            // System.out.println("111= " + s1);
+            if (s1.startsWith(",")) {
+              two = two + "\"" + s1.replaceFirst(",", "") + "\"";
+            } if (s1.endsWith(",")) {
+              two = two + "\"" + s1.substring(0,s1.length()-1) + "\"";
+            }  if (s1.contains(",,")) {
+              two = two + "\"" + s1.replace(",,", ",") + "\"";
+            }
+          }
+        }
+        data = data + one + two + "\n";
+      } else {
+        data = data + strLine + "\n";
+      }
+    }
+    System.out.println(data);
+    write(data);
+    br.close();
+  }
+  public getAttrReq(){
+    List list = plan.getAccountRequests().get(0).getAttributeRequests();
+    // print("Acct req list : "+list);
+    if(list == null){
+      print("NO SUCH ATTR RQ LIST AVAILABLE"); 
+    }
+
+    for (AttributeRequest req : list) {
+      print ("Acct req  :\n"+req.toXml());
+
+      if (req.getOp().equals(ProvisioningPlan.Operation.Add)) {
+        String value = (String) req.getValue();
+        String name = (String) req.getName();
+        // String idName=plan.getAccountRequests().get(0).getNativeIdentity();
+        String idName=plan.getIdentity().getName();
+        print(idName +" :Attribute req value and Attr Req Name : "+value+"  && "+name);
+        System.out.println(">>>> Start  the  ADD method");
+        add(value,idName);
+      }
+      else  if (req.getOp().equals(ProvisioningPlan.Operation.Remove)) {
+        String value = (String) req.getValue();
+        String name = (String) req.getName();
+        // String idName=plan.getAccountRequests().get(0).getNativeIdentity();
+        String idName=plan.getIdentity().getName();
+        print(idName +" :Attribute req value and Attr Req Name : "+value+"  && "+name);
+        System.out.println(">>>> START the  Remove method");
+        remove(value,idName);
+      }
+      else { 
+        System.out.println("LEAVING  the  OPERATION method>>>>");
+        proResult.setStatus(ProvisioningResult.STATUS_FAILED);
+        return proResult;
+      }
+
+    }
+
+  }
+
+  getAttrReq();
+  System.out.println("Leaving modify rule >>>> ");
+
+  ]]></Source>
+        
+
+</Rule>

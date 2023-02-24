@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r JDBCoracle pro" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.api.SailPointContext;
+  import sailpoint.object.Application;
+  import sailpoint.object.Identity;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.ProvisioningPlan.Operation;
+  import sailpoint.tools.GeneralException;
+
+  String identityName ="zane.sulikowski";
+  Identity identityObj = context.getObjectByName(Identity.class,identityName);
+  ProvisioningPlan plan = new ProvisioningPlan();
+  plan.setIdentity(identityObj);
+
+  AccountRequest jdbc = new AccountRequest();
+  jdbc.setApplication("oracle_JDBC");
+  jdbc.setOp(ProvisioningPlan.ObjectOperation.Create);
+  //jdbc.setOp(ProvisioningPlan.ObjectOperation.Modify);
+  //  jdbc.setOp(ProvisioningPlan.ObjectOperation.Delete);
+
+  // String emplID = identityObj.getLink(context.getObjectByName(Application.class,"Service Now").getAttributes().get("EmployeeID");
+  String username = (String) identityObj.getLink(context.getObjectByName(Application.class,"Service Now")).getAttributes().get("user_name");
+  String fn = (String) identityObj.getLink(context.getObjectByName(Application.class,"Service Now")).getAttributes().get("first_name");
+  String ln = (String) identityObj.getLink(context.getObjectByName(Application.class,"Service Now")).getAttributes().get("last_name");
+  // String networkID = identityObj.getLink(context.getObjectByName(Application.class,"HR Application")).getAttributes().get("NetworkID");
+  String email = (String) identityObj.getLink(context.getObjectByName(Application.class,"Service Now")).getAttributes().get("email");
+  String dep=(String) identityObj.getLink(context.getObjectByName(Application.class,"Service Now")).getAttributes().get("department");
+
+  jdbc.setNativeIdentity(email);
+
+  jdbc.add(new AttributeRequest("EMAIL", email));
+  jdbc.add(new AttributeRequest("FIRSTNAME",  fn));
+  jdbc.add(new AttributeRequest("LASTNAME",  ln));
+  jdbc.add(new AttributeRequest("NAME",  username));
+  jdbc.add(new AttributeRequest("DEPARTMENT", dep));
+
+  /*
+  if(dep.equals("Database")||dep.equals("Finance"))
+    jdbc.add(new AttributeRequest("DEPARTMENT", ProvisioningPlan.Operation.Add,dep));
+
+  else if(dep.equals("Engineering"))
+    jdbc.add(new AttributeRequest("DEPARTMENT", ProvisioningPlan.Operation.Add,"3"));
+
+    else if(dep.equals("Human Resources"))
+    jdbc.add(new AttributeRequest("DEPARTMENT", ProvisioningPlan.Operation.Add,"4"));
+
+    else
+    jdbc.add(new AttributeRequest("DEPARTMENT", ProvisioningPlan.Operation.Add,dep));
+    System.out.print("6666666");
+    */
+  plan.add(jdbc);
+
+  Provisioner provisioner = new Provisioner(context);
+  provisioner.execute(plan);
+  System.out.println("@@@plan in joiner workflow::" + plan.toXml());
+
+  ]]></Source>
+        
+
+</Rule>

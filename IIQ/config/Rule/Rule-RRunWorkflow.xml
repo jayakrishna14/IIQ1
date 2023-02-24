@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r Run Workflow" type="Validation">
+          
+    
+    <Source><![CDATA[
+
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import org.apache.log4j.Logger;
+  import org.apache.log4j.Level;
+  Logger log = Logger.getLogger("sailpoint.services.bshdemo");
+ 
+  log.setLevel(Level.DEBUG);
+  //  Identity identity = context.getObjectByName(Identity.class,id);
+
+  //  IdentityChangeEvent event = new IdentityChangeEvent();
+  // IdentityTrigger trigger = new IdentityTrigger();
+
+  //HashMap map = new HashMap();
+  // map.put("identityName", "Aaron Nichols");
+  // map.put("approvalScheme", "none");
+  //  map.put("trigger", trigger);
+  // map.put("event", event);
+
+  WorkflowLaunch wflaunch = new WorkflowLaunch();
+ 
+  //log.debug("11111111111");
+  
+  Workflow wfn = context.getObjectByName(Workflow.class, "w demo WF");
+  if (wfn != null)
+  {
+    //log.debug("222222");
+   wflaunch.setWorkflowName(wfn.getName());
+   wflaunch.setWorkflowRef(wfn.getName());
+   // wflaunch.setVariables(map);
+   Workflower workflower = new Workflower(context);
+    //log.debug("3333333");
+   WorkflowLaunch launch = workflower.launch(wflaunch);
+  }
+
+
+  ]]></Source>
+        
+
+</Rule>

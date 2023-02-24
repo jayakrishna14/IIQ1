@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="CreateMulti Accounts Rule" type="Validation">
+          
+    
+    <Source><![CDATA[
+   import sailpoint.object.*;
+  import sailpoint.api.*;
+  
+  
+  
+  Identity identityObj = context.getObjectByName(Identity.class,"Betty Young");
+  List <String> entlist=new ArrayList <String>();
+  entlist.add(identityObj.getName()+"-INTL");
+  entlist.add(identityObj.getName()+"-ITSERVICES");
+  entlist.add(identityObj.getName()+"-ATTMX");
+  
+  ProvisioningPlan plan = new ProvisioningPlan();
+        
+        if(plan!=null)
+        {
+        plan.setIdentity(identityObj);
+        
+        for(String a:entlist){
+        ProvisioningPlan.AccountRequest acctReqAD = new ProvisioningPlan.AccountRequest();
+        acctReqAD.setApplication("Test HR");
+        acctReqAD.setOp(ProvisioningPlan.ObjectOperation.Create);
+				acctReqAD.setNativeIdentity(a);
+        acctReqAD.add(new ProvisioningPlan.AttributeRequest("fame_User_NETID", ProvisioningPlan.Operation.Add,a));
+        acctReqAD.add(new ProvisioningPlan.AttributeRequest("Manager_NETID", ProvisioningPlan.Operation.Add,"AA141"));
+        acctReqAD.add(new ProvisioningPlan.AttributeRequest("Roles", ProvisioningPlan.Operation.Add,"NYU_MY_DOA"));    
+        
+        plan.add(acctReqAD);
+          }
+        Provisioner provisioner = new Provisioner(context);
+        provisioner.execute(plan);
+        context.saveObject(identityObj);
+        context.commitTransaction();
+        }
+
+        return identityObj;
+    
+]]></Source>
+        
+
+</Rule>

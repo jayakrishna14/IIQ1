@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition formPath="/analyze/analyzeTabs.jsf" name="serviceNow0" resultAction="Rename" subType="Search" type="GridReport">
+          
+    
+    <Attributes>
+                    
+        
+        <Map>
+                              
+            
+            <entry key="IdentitySearchTaskItem">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <SearchItem description="" name="serviceNow" operation="AND" type="Identity">
+                                                            
+                        
+                        <IdentityFields>
+                                                                      
+                            
+                            <String>department</String>
+                                                                      
+                            
+                            <String>email</String>
+                                                                      
+                            
+                            <String>firstName</String>
+                                                                      
+                            
+                            <String>lastName</String>
+                                                                      
+                            
+                            <String>roles</String>
+                                                                      
+                            
+                            <String>userName</String>
+                                                                    
+                        
+                        </IdentityFields>
+                                                            
+                        
+                        <InputDefinitions>
+                                                                      
+                            
+                            <SearchInputDefinition description="srch_input_def_detected_role_include_descr" headerKey="srch_input_def_detected_role_include" inputType="Equal" name="roleHierarchy" nullPropertyName="bundleSummary" nullPropertyType="String" propertyName="roleHierarchy" propertyType="None" searchType="Identity">
+                                                                                
+                                
+                                <Value>
+                                                                                          
+                                    
+                                    <Boolean/>
+                                                                                        
+                                
+                                </Value>
+                                                                              
+                            
+                            </SearchInputDefinition>
+                                                                      
+                            
+                            <SearchInputDefinition description="srch_input_def_assigned_role_include_descr" headerKey="srch_input_def_assigned_role_include" inputType="Equal" name="assignedRoleHierarchy" nullPropertyName="assignedRoleSummary" nullPropertyType="String" propertyName="assignedRoleHierarchy" propertyType="None" searchType="Identity">
+                                                                                
+                                
+                                <Value>
+                                                                                          
+                                    
+                                    <Boolean/>
+                                                                                        
+                                
+                                </Value>
+                                                                              
+                            
+                            </SearchInputDefinition>
+                                                                      
+                            
+                            <SearchInputDefinition description="srch_input_def_application" headerKey="srch_input_def_application" ignoreCase="true" inputType="Equal" name="application" nullPropertyName="links" nullPropertyType="Collection" propertyName="SPT_links.application.id" propertyType="Collection" searchType="Identity">
+                                                                                
+                                
+                                <Value>
+                                                                                          
+                                    
+                                    <List>
+                                                                                                    
+                                        
+                                        <String>c0a81d2385c31153818610fa278c2270</String>
+                                                                                                  
+                                    
+                                    </List>
+                                                                                        
+                                
+                                </Value>
+                                                                              
+                            
+                            </SearchInputDefinition>
+                                                                    
+                        
+                        </InputDefinitions>
+                                                            
+                        
+                        <SearchFilters>
+                                                                      
+                            
+                            <SearchItemFilter booleanOperation="AND" property="srch_input_def_application">
+                                                                                
+                                
+                                <SearchFilter>
+                                                                                          
+                                    
+                                    <Filter ignoreCase="true" operation="EQ" property="SPT_links.application.id" value="c0a81d2385c31153818610fa278c2270"/>
+                                                                                        
+                                
+                                </SearchFilter>
+                                                                                
+                                
+                                <Value>
+                                                                                          
+                                    
+                                    <List>
+                                                                                                    
+                                        
+                                        <String>c0a81d2385c31153818610fa278c2270</String>
+                                                                                                  
+                                    
+                                    </List>
+                                                                                        
+                                
+                                </Value>
+                                                                              
+                            
+                            </SearchItemFilter>
+                                                                    
+                        
+                        </SearchFilters>
+                                                          
+                    
+                    </SearchItem>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="SearchReportFilters">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <CompositeFilter operation="AND">
+                                                            
+                        
+                        <Filter ignoreCase="true" operation="EQ" property="links.application.id" value="c0a81d2385c31153818610fa278c2270"/>
+                                                          
+                    
+                    </CompositeFilter>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="SearchReportInputDefinitions">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <List>
+                                                            
+                        
+                        <SearchInputDefinition description="Department" extendedAttribute="true" headerKey="Department" inputType="Like" matchMode="START" name="department" propertyName="department" propertyType="String" searchType="ExtendedIdentity"/>
+                                                            
+                        
+                        <SearchInputDefinition description="srch_input_def_email" headerKey="srch_input_def_email" ignoreCase="true" inputType="Like" matchMode="START" name="email" propertyName="email" propertyType="String" searchType="Identity"/>
+                                                            
+                        
+                        <SearchInputDefinition description="srch_input_def_first_name" headerKey="srch_input_def_first_name" ignoreCase="true" inputType="Like" matchMode="START" name="firstName" propertyName="firstname" propertyType="String" searchType="Identity"/>
+                                                            
+                        
+                        <SearchInputDefinition description="srch_input_def_last_name" headerKey="srch_input_def_last_name" ignoreCase="true" inputType="Like" matchMode="START" name="lastName" propertyName="lastname" propertyType="String" searchType="Identity"/>
+                                                            
+                        
+                        <SearchInputDefinition description="Roles" extendedAttribute="true" headerKey="Roles" inputType="Like" matchMode="START" name="roles" propertyName="roles" propertyType="String" searchType="ExtendedIdentity"/>
+                                                            
+                        
+                        <SearchInputDefinition description="srch_input_def_user_name" headerKey="srch_input_def_user_name" ignoreCase="true" inputType="Like" matchMode="START" name="userName" propertyName="name" propertyType="String" searchType="None"/>
+                                                          
+                    
+                    </List>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="SearchReportOwner">
+                                        
+                
+                <value>
+                                                  
+                    
+                    <Identity lastLogin="1676869572312" lastRefresh="1676527794421" name="spadmin" password="3:ACP:2S9l8K++vfm3sUDDSdPGlZuTB0lq8gpRG8Ea6ZYBaLI=" protected="true">
+                                                            
+                        
+                        <Attributes>
+                                                                      
+                            
+                            <Map>
+                                                                                
+                                
+                                <entry key="displayName" value="The Administrator"/>
+                                                                                
+                                
+                                <entry key="firstname" value="The"/>
+                                                                                
+                                
+                                <entry key="lastname" value="Administrator"/>
+                                                                              
+                            
+                            </Map>
+                                                                    
+                        
+                        </Attributes>
+                                                            
+                        
+                        <UIPreferencesRef>
+                                                                      
+                            
+                            <Reference class="sailpoint.object.UIPreferences"/>
+                                                                    
+                        
+                        </UIPreferencesRef>
+                                                            
+                        
+                        <Capabilities>
+                                                                      
+                            
+                            <Reference class="sailpoint.object.Capability" name="SystemAdministrator"/>
+                                                                    
+                        
+                        </Capabilities>
+                                                            
+                        
+                        <Scorecard/>
+                                                          
+                    
+                    </Identity>
+                                                
+                
+                </value>
+                                      
+            
+            </entry>
+                              
+            
+            <entry key="SearchReportType" value="Identity"/>
+                            
+        
+        </Map>
+                  
+    
+    </Attributes>
+          
+    
+    <Description/>
+          
+    
+    <Owner>
+                    
+        
+        <Reference class="sailpoint.object.Identity" name="spadmin"/>
+                  
+    
+    </Owner>
+          
+    
+    <Parent>
+                    
+        
+        <Reference class="sailpoint.object.TaskDefinition" name="Search Report"/>
+                  
+    
+    </Parent>
+        
+
+</TaskDefinition>

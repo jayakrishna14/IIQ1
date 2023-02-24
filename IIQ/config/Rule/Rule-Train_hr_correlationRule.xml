@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Train_HR_correlation rule" type="Correlation">
+          
+    
+    <Description>Identity Correlation Rules are used to find identities to which new accounts can be attached.
+
+    A correlation rule must return a Map with one of the specified Return arguments.</Description>
+          
+    
+    <Signature returnType="Map">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="environment" type="Map">
+                                        
+                
+                <Description>
+          Arguments passed to the aggregation task.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="application">
+                                        
+                
+                <Description>
+          Application being aggregated.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="account">
+                                        
+                
+                <Description>
+          A sailpoint.object.ResourceObject returned from the
+          collector.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="link">
+                                        
+                
+                <Description>
+          Existing link to this account.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                    
+        
+        <Returns>
+                              
+            
+            <Argument name="identityName">
+                                        
+                
+                <Description>
+          The name of an Identity object.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="identity">
+                                        
+                
+                <Description>
+          A fully resolved Identity object if the rule wants
+          to do its own queries to locate the identity.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="identityAttributeName">
+                                        
+                
+                <Description>
+          The name of the extended attribute that can be used
+          to locate an existing identity.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="identityAttributeValue">
+                                        
+                
+                <Description>
+          The value of the named extended attribute that can be used
+          to locate an existing identity. This attribute is used
+          together with the identityAttributeName argument.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Returns>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[import sailpoint.object.*;
+  import sailpoint.api.*;
+
+  String str = account.getStringAttribute("Name");
+  List list = new ArrayList();
+  Map map = new HashMap();
+  map.put("identityAttributeName","displayName");
+  map.put("identityAttributeValue",str);
+
+  Custom cus = context.getObjectByName(Custom.class,"newCustom");
+  if(cus == null){
+    Custom nc = new Custom();
+    nc.setName("newCustom");
+    Attributes attrs = new Attributes();
+    Map map1 = new HashMap();
+    map1.put("correlatedAccounts","");
+    map1.put("createdAccounts","");
+    attrs.setMap(map1);
+    nc.setAttributes(attrs);
+    context.saveObject(nc);
+    context.commitTransaction();
+  }
+  if(cus != null){
+    if(cus.getAttributes().get("correlatedAccounts") != null){
+      list = cus.getAttributes().get("correlatedAccounts");
+      if(!list.contains(str)){
+        list.add(str);
+        cus.getAttributes().put("correlatedAccounts",list);
+      }
+      if(cus.getAttributes().get("createdAccounts") != null && cus.getAttributes().get("createdAccounts").contains(str)) cus.getAttributes().get("createdAccounts").remove(str);
+    }else{
+      List list1 = new ArrayList();
+      list1.add(str);
+      cus.getAttributes().put("correlatedAccounts",list1);
+    }
+  }
+  context.saveObject(cus);
+  context.commitTransaction();
+
+  return map;
+  ]]></Source>
+        
+
+</Rule>

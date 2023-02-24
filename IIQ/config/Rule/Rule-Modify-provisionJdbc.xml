@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Modify-Provision JDBC" type="JDBCOperationProvisioning">
+          
+    
+    <Description>This rule is used by the JDBC connector to do provisioning of the data .</Description>
+          
+    
+    <Signature returnType="ProvisioningResult">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="application">
+                                        
+                
+                <Description>The application whose data file is being processed.</Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="schema">
+                                        
+                
+                <Description>The Schema currently in use.</Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="connection">
+                                        
+                
+                <Description>A connection object to connect to database.</Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description>The ProvisioningPlan created against the JDBC application.</Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="request">
+                                        
+                
+                <Description>The ProvisioningRequest created against the JDBC application.</Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                    
+        
+        <Returns>
+                              
+            
+            <Argument name="result">
+                                        
+                
+                <Description>A Provisioning Result object is desirable to return the status.IT can be a new object or part of  Provisioning Plan</Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Returns>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[import java.sql.ResultSet;
+  import java.sql.Statement;
+  import java.sql.Connection;
+  import java.sql.DriverManager;
+  import java.sql.Types;
+  import sailpoint.api.SailPointContext;  
+  import sailpoint.object.Identity;
+  import sailpoint.object.*;  
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import oracle.jdbc.OracleTypes;
+  import java.sql.PreparedStatement;
+  import java.sql.SQLException;
+  import java.sql.Date;
+  import sailpoint.object.PasswordPolicy;
+  import sailpoint.api.PasswordGenerator;
+  import sailpoint.object.ProvisioningResult;
+public String getAttributeRequestValue(AccountRequest acctReq, String attribute) {
+if ( acctReq != null ) {
+      AttributeRequest attrReq = acctReq.getAttributeRequest(attribute);
+      if ( attrReq != null ) {
+        return attrReq.getValue();
+      }
+    }
+    return null;
+  }
+  ProvisioningResult provresult = new ProvisioningResult();
+  String user = " ";
+  String emplID = " ";
+  String username = " ";
+  String networkID=" ";
+
+  System.out.println("calling create ");
+  if ( plan != null ) {
+    System.out.println("accRequests ProvisioningPlan:\n" + plan.toXml());
+    List accRequests = plan.getAccountRequests(); 
+    if ( ( accRequests != null ) && ( accRequests.size() > 0 ) ) {
+      for(AccountRequest accRequest : accRequests) {
+        user = plan.getNativeIdentity();
+        Identity identity = context.getObjectByName(Identity.class, user);
+        emplID = identity.getAttribute("EmployeeID");
+        username = identity.getDisplayName();
+        networkID = identity.getAttribute("NetworkID");
+        try{
+          if(AccountRequest.Operation.Modify.equals(accRequest.getOperation())) {
+            List attrReqs = accRequest.getAttributeRequests();
+            if(attrReqs.size() > 0){
+              for(int i=0; i<attrReqs.size(); i++){
+              	AttributeRequest at = (AttributeRequest)attrReqs.get(i);
+                if(at.getOp().toString().equals("Remove")){
+                	String query = "DELETE FROM test.jdbcusers WHERE EmployeeID=? AND GroupId=?";
+                  PreparedStatement stmnt = connection.prepareStatement(query);
+                  stmnt.setString(1, emplID);
+                  stmnt.setString(2, at.getValue());
+                  stmnt.executeUpdate();
+                  
+                  provresult.setStatus(ProvisioningResult.STATUS_COMMITTED);
+                }
+                if(at.getOp().toString().equals("Add")){
+            			String query ="INSERT INTO test.jdbcusers VALUES(?,?,?,?,?,?,?)";
+           			 	PreparedStatement st = connection.prepareStatement(query);
+            			st.setString(1, username);
+            			st.setString(2, identity.getFirstname());
+            			st.setString(3, identity.getLastname());
+            			st.setString(4, emplID);
+            			st.setString(5, identity.getAttribute("email"));
+            			st.setString(6, networkID);
+            			st.setString(7, at.getValue());
+            			st.executeUpdate();
+
+            			provresult.setStatus(ProvisioningResult.STATUS_COMMITTED);
+              	}
+            }
+            System.out.println("Retek Delete User Result : " +result);
+          }
+          }
+        } catch (Exception e) {
+          provresult.setStatus(ProvisioningResult.STATUS_FAILED);
+          provresult.addError(e);
+          System.out.println("Retek Delete User Error e: " +e);    
+        }finally { 
+
+          try{ 
+            if (connection != null) 
+              connection.close(); 
+          }catch (SQLException e) { 
+            e.printStackTrace(); 
+          } 
+        }      
+      }  
+    }
+  }
+
+  return provresult;
+
+]]></Source>
+        
+
+</Rule>

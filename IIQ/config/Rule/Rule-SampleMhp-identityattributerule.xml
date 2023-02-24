@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Sample MHP-identityAttributeRule" type="Validation">
+          
+    
+    <Source><![CDATA[
+
+  import sailpoint.object.Identity;
+  import sailpoint.api.*;
+  import java.text.*;
+  import java.util.Date;
+  import java.text.DateFormat;
+  import java.text.SimpleDateFormat;
+  import java.util.Calendar;
+  import sailpoint.tools.Util;
+
+  Identity identity = context.getObjectByName(Identity.class,"James Smith");
+  String lifecycleStatus = identity.getAttribute("lifecycleStatus");
+  String endDate = identity.getAttribute("endDate");
+  String startDate = identity.getAttribute("startDate");
+  SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+  Date convertedEndDate = null;
+  if(endDate != null) convertedEndDate = formatter.parse(endDate);
+  System.out.println("Hiiii"+convertedEndDate);
+  System.out.println("Hiiii"+formatter.format(convertedEndDate));
+  Date currentDate = new Date();
+
+  Date convertedStartDate = null;
+  if(startDate != null) convertedStartDate = formatter.parse(startDate);
+
+  int leaver1Difference = 0;
+  if(convertedEndDate != null) leaver1Difference = Util.getDaysDifference(currentDate,convertedEndDate);
+  int differenceInDays = 0;
+
+  if(convertedStartDate != null) differenceInDays = Util.getDaysDifference(convertedStartDate,currentDate);
+
+  if (lifecycleStatus != null && lifecycleStatus.equals("PendingJoiner") && (endDate == null || (convertedEndDate !=null && convertedEndDate.after(currentDate))) && ((differenceInDays >= 1 && differenceInDays <= 14) || (convertedStartDate != null && convertedStartDate.before(currentDate)))){
+    return "StartJoiner1";
+  }
+
+  if (lifecycleStatus != null && lifecycleStatus.equals("Joiner1") && (endDate == null || (convertedEndDate != null && convertedEndDate.after(currentDate))) && ((convertedStartDate != null && convertedStartDate.equals(currentDate)) || (convertedStartDate != null && convertedStartDate.before(currentDate)))){
+    return "StartJoiner2";
+  }
+  if (lifecycleStatus != null && lifecycleStatus.equals("Active") && ( (convertedEndDate != null && convertedEndDate.before(currentDate)))){
+    return "StartLeaver1";
+  }
+  if (lifecycleStatus != null && lifecycleStatus.equals("Leaver1") && leaver1Difference >= 30){
+    return "StartLeaver2";
+  }
+  if (lifecycleStatus != null && lifecycleStatus.equals("Joiner1") && (convertedEndDate != null && convertedEndDate.before(currentDate))){
+    return "NotStarted";
+  }
+  if (lifecycleStatus != null && (lifecycleStatus.equals("Leaver1") || lifecycleStatus.equals("LeaverCompleted")) && convertedEndDate.after(currentDate) && startDate != null && ((differenceInDays >= 1 && differenceInDays <= 14) || convertedStartDate.before(currentDate))){
+    return "StartReinstate";
+  }
+  return null;
+
+
+
+  ]]></Source>
+        
+
+</Rule>

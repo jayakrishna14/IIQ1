@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Test email" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import java.util.*;
+  import java.util.List;
+  import sailpoint.object.ManagedAttribute;
+  import sailpoint.api.Terminator;
+  import sailpoint.object.Resolver;
+
+  Identity id = context.getObjectByName(Identity.class,"Evelyn Ellis");
+  /* Filter myFilter = Filter.eq("links.application.name", "AD");
+  QueryOptions qo = new QueryOptions();
+  qo.addFilter(myFilter);
+
+  List listIdentities = context.getObjects(Identity.class,qo);
+
+  for(Identity account: listIdentities){*/
+  List <Link> appLinks = id.getLinks();
+  /* return appLinks;
+  for(Link link:appLinks){
+    if(link.getApplicationName().equals("AD"))
+    id.remove(link);
+  }*/
+
+
+
+
+
+  for(int i=0; i<appLinks.size(); i++){
+    if(appLinks.get(i).getApplicationName().equals("AD"))
+      id.remove(appLinks.get(i));
+  }
+
+  context.saveObject(id);
+  context.commitTransaction();
+  return id;
+
+  /*
+  Filter filter=Filter.and(Filter.eq("links.application.name","AD"),Filter.eq("links.nativeIdentity",userName));
+  QueryOptions qo=new QueryOptions();
+  qo.addFilter(filter);
+
+  List ides=context.getObjects(Identity.class,qo);
+  return ides.get(0).getName();
+  */
+  String name = "Aaron Nichols";
+
+  Filter filter = Filter.like("nativeIdentity", "CN="+name+",OU=People,OU=Demo,DC=Eshiam,DC=com");
+  QueryOptions qo= new QueryOptions();
+  qo.addFilter(filter);
+
+  List idList= context.getObjects(Link.class,qo);
+  Map map = new HashMap();
+  for(Identity id:idList){
+    map.put("IdentityAttrName","SAPAttrName");
+    map.put("IdentityAttrValue",value);
+    return id;
+  }
+
+
+
+  //import com.example.integration.*;
+  List list = new ArrayList();
+  Custom cus = context.getObjectByName(Custom.class,"newCustom");
+  list.add(cus.getAttributes().get("correlatedAccounts"));
+  return list;
+
+
+
+  ManagedAttribute mg = context.getObject(ManagedAttribute.class,"c0a89d017f8810ba817f91141dfa059f");
+  return mg;
+  Filter f = Filter.eq("displayName","WS_GROUP_102");
+  ManagedAttribute ma = context.getUniqueObject(ManagedAttribute.class,f);  
+  return ma;
+
+
+  Certification cer = context.getObjectById(Certification.class,"a9fef0a782b413f28182caa843b70491");
+  List cerEnt = cer.getEntities();
+  List cerItem = cerEnt.get(0).getItems();
+  List strs = cerItem.get(0).getApplicationNames();
+  Application app= context.getObjectByName(Application.class,strs.get(0));
+  return app.getOwner().getName();
+
+  /*
+  Identity id=context.getObjectByName(Identity.class,"Katherine Langford");
+  app.setOwner(id);
+  context.saveObject(app);
+  context.commitTransaction();
+
+  */
+
+
+  return app.getOwner().getName();
+
+  //ClassLoader cl = new ClassLoader();
+  // List l = cl.data();
+  return l;
+  /*
+              Map args =new HashMap();
+                    ArrayList list = new ArrayList();
+                    list.add("James Smith");
+                    list.add("Aaron Nichols");
+
+                  for(String str : list){
+                       System.out.println("String"+str);
+                    Identity id = context.getObjectByName(Identity.class,str);
+                    String emailID = id.getAttribute("email");
+                    args.put("ownerName",str);
+                    EmailOptions eo = new EmailOptions(emailID,args);
+                    EmailTemplate et = context.getObjectByName(EmailTemplate.class,"Access Request Reminder");
+                    context.sendEmailNotification(et,eo);
+                    context.saveObject(id);
+                  }
+                      context.commitTransaction();*/
+
+
+  /* Custom cus = context.getObjectByName(Custom.class,"Custom Object"); 
+	   Attributes attr = cus.getAttributes();
+	   List keyNames = new ArrayList();
+	   Map teMap = attr.getMap();
+	   Set set = teMap.keySet();
+	   for(String str: set){
+	      keyNames.add(str);
+       System.out.println("**************"+keyNames);
+
+	   }
+  return keyNames;
+  */
+  ]]></Source>
+        
+
+</Rule>

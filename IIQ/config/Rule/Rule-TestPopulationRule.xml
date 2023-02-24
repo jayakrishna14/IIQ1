@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Test Population RUle">
+          
+    
+    <Source><![CDATA[
+    import sailpoint.object.*;
+  import sailpoint.api.*;
+  import java.util.*;
+  import java.util.List;
+  import sailpoint.object.GroupDefinition;
+  import sailpoint.object.Filter.CompositeFilter;
+  import sailpoint.object.Filter;
+  
+
+  QueryOptions options = new QueryOptions();
+  Filter f = Filter.eq("links.application.name","AD");
+  options.addFilter(f);
+  List filteredIdList = new ArrayList();
+  List idList = context.getObjects(Identity.class,options);
+  for (Identity id : idList) {
+    IdentityService idService = new IdentityService(context);
+	Application app = context.getObjectByName(Application.class,"AD");
+	List links = idService.getLinks(id,app);
+	for (Link link : links) {
+	  if (link != null && link.getAttribute("FirstName") != null && link.getAttribute("FirstName").startsWith("N")) {
+	    filteredIdList.add(id.getId());
+	  }
+	}
+  }
+  
+  Filter f1 = Filter.contains("identity.id",filteredIdList);
+  CompositeFilter cf = new CompositeFilter();
+  cf.add(f1);  
+  GroupDefinition gd = new GroupDefinition();
+  gd.setFilter(cf);
+  gd.setIndexed(true);
+  gd.setName("AD A population");
+  gd.setOwner(context.getObjectByName(Identity.class,"spadmin"));
+  gd.setPrivate(true);
+  context.saveObject(gd);
+  context.commitTransaction();
+]]></Source>
+        
+
+</Rule>

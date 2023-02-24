@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="MHP-Release Stage Rule" type="Validation">
+          
+    
+    <Source><![CDATA[
+       
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import java.sql.*;
+  import sailpoint.tools.JdbcUtil;
+  import java.sql.Connection;
+	import java.sql.DriverManager;
+	import java.sql.PreparedStatement;
+	import java.sql.ResultSet;
+	import java.sql.SQLException;
+  import java.util.ArrayList;
+  import java.util.Random;
+  import java.util.List;
+  import java.text.SimpleDateFormat;
+  import java.text.ParseException;
+  import java.util.Date;
+  import java.util.*;
+  import sailpoint.object.*;
+  import sailpoint.tools.*;
+  import sailpoint.api.*;
+  import sailpoint.connector.*;
+  import sailpoint.object.Attributes;
+  import sailpoint.object.Filter;
+  import sailpoint.object.Identity;
+  import sailpoint.object.QueryOptions;
+  import sailpoint.object.*;
+  import sailpoint.connector.Connector;  
+  import sailpoint.object.ResourceObject;
+  
+  
+  try {
+      Connection con = null;
+  PreparedStatement ps = null;
+List l = new ArrayList();
+  //To Get Connection of Database
+  con = DriverManager.getConnection("jdbc:mysql://localhost:3306/test","root","8499041218");
+  String sql = "SELECT * FROM test.iptable WHERE Expiration <= DATE_SUB(NOW(), INTERVAL 60 DAY)";
+  ps = con.prepareStatement(sql);
+  ResultSet rs = ps.executeQuery();
+ 	EmailTemplate et = context.getObjectByName(EmailTemplate.class,"Mitigation Expiration");
+  
+  while (rs.next()){    
+    String userIdName = rs.getString("userId");
+    Filter f = Filter.eq("name",userIdName);
+    Identity id = context.getUniqueObject(Identity.class,f);
+    if (id!= null && userIdName.equals(id.getAttribute("displayName"))){
+      id.setAttribute("ipAddress","");
+      id.setAttribute("phoneAndIPStatus","");
+      
+      String ipadress = rs.getString("IP");
+      String updateQuery = "update test.iptable set used=null, userId=null, Expiration=null where IP=?";
+      PreparedStatement stmnt = con.prepareStatement(updateQuery); 
+      stmnt.setString(1, ipadress);
+      stmnt.executeUpdate();
+      
+       context.saveObject(id);
+       context.commitTransaction();
+      
+  		EmailOptions eo = new EmailOptions();
+  		Identity admin = id.getAdministrator();
+      
+      if (admin != null && admin.getEmail() != null){
+  			eo.setTo(admin.getEmail());
+        Map args = new HashMap();
+        args.put("ipaddress",ipadress);
+        args.put("employeeId",id.getAttribute("EmployeeID"));
+        args.put("DisplayName",userIdName);
+        eo.setVariables(args);
+      	context.sendEmailNotification(et,eo);
+      }
+    }
+  }
+    
+  } finally {
+    rs.close();
+    con.close();
+  }
+       
+
+  
+  
+            
+    ]]></Source>
+        
+
+</Rule>

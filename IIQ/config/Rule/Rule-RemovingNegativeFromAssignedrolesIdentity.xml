@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Removing negative from AssignedRoles Identity">
+          
+    
+    <Signature returnType="ProvisioningResult">
+                    
+        
+        <Returns>
+                              
+            
+            <Argument name="count">
+                                        
+                
+                <Description>A Provisioning Result object is desirable to return the status.IT can be a new object or part of  Provisioning Plan</Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Returns>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+
+  import sailpoint.api.*;
+  import sailpoint.object.*;
+  import java.util.*;
+  import java.text.*;
+  import java.nio.charset.StandardCharsets;
+  import java.nio.file.Paths;
+  import java.nio.file.Files;
+  import sailpoint.tools.Util;
+  import java.util.stream.*;
+  import sailpoint.object.TaskDefinition;
+  import sailpoint.object.RoleAssignment;
+
+  List l = new ArrayList();
+  int count = 0;
+  TaskDefinition td = context.getObjectByName(TaskDefinition.class,"Removing negative from AssignedRoles");
+  String role = td.getArguments().get("role");
+  String sqlQuery = "sql:SELECT name from spt_identity WHERE preferences like '%negative=\"true\"%' AND preferences LIKE '%"+role+"%'";
+  QueryOptions qo = new QueryOptions();
+  qo.setQuery(sqlQuery);
+
+  Iterator it = context.search(sqlQuery,null,qo);
+  while(it.hasNext()){
+    String str =  it.next();
+    Identity ide = context.getObject(Identity.class,str);
+    Map map = ide.getPreferences();
+    List roleAssign = map.get("roleAssignments");
+    for(RoleAssignment ra : roleAssign){
+      if(ra.isNegative()){
+        ra.setNegative(false);
+        context.saveObject(ide);
+        context.commitTransaction();
+        count++;
+
+        TaskDefinition task = context.getObjectByName(TaskDefinition.class,"Refresh Identity Cube");
+        task.setArgument("filter","name==\""+str+"\"");
+        context.saveObject(task);
+        context.commitTransaction();
+        TaskManager tm = new TaskManager(context);
+        tm.run(task,null);
+      }
+    }
+    TaskResult tr = context.getObjectByName(TaskResult.class,"Removing negative from AssignedRoles");
+    if(tr != null){
+      tr.setAttribute("count",count);
+      return "Success";
+    }
+  }
+
+  ]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Single Account Aggregation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.Application;
+  import sailpoint.object.Attributes;
+  import sailpoint.object.Custom;
+  import sailpoint.object.Filter;
+  import sailpoint.object.Identity;
+  import sailpoint.object.Link;
+  import sailpoint.object.QueryOptions;
+  import sailpoint.object.ResourceObject;
+  import sailpoint.object.TaskResult;
+  import sailpoint.object.Rule;
+  import sailpoint.connector.JDBCConnector;
+  import sailpoint.api.Aggregator;
+  import sailpoint.connector.Connector;
+
+  import org.apache.log4j.Logger;
+  import org.apache.log4j.Level;
+
+
+  String errorMessage = "";
+
+  String applicationName = "AD";
+  String accountName = "CN=Andrea Hudson,OU=People,OU=Demo,DC=IIQ,DC=com";
+
+  Application appObject = context.getObjectByName(Application.class, applicationName);
+  String appConnName = appObject.getConnector();
+  log.debug("Application " + applicationName + " uses connector " + appConnName);
+
+  Connector appConnector = sailpoint.connector.ConnectorFactory.getConnector(appObject, null);
+  if (null == appConnector) {
+    errorMessage = "Failed to construct an instance of connector [" + appConnName + "]";
+    return errorMessage;
+  }
+
+  ResourceObject rObj = null;
+  try {
+
+    rObj = (ResourceObject) appConnector.getObject("account", accountName, null);
+
+  } catch (sailpoint.connector.ObjectNotFoundException onfe) {
+    errorMessage = "Connector could not find account: [" + accountName + "]";
+    errorMessage += " in application  [" + applicationName + "]";
+    log.error(errorMessage);
+    log.error(onfe);  
+    return errorMessage;
+  }
+
+  if (null == rObj) {
+    errorMessage = "ERROR: Could not get ResourceObject for account: " + accountName;
+    log.eror(errorMessage);
+    return errorMessage;
+  }
+
+  log.debug("Got raw resourceObject: " + rObj.toXml());
+
+  Rule customizationRule = appObject.getCustomizationRule();
+  if (null != customizationRule) {
+
+    log.debug("Customization rule found for applicaiton " + applicationName);  
+
+    try {
+
+      
+      HashMap ruleArgs = new HashMap();
+      ruleArgs.put("context",     context);
+      ruleArgs.put("log",         log);
+      ruleArgs.put("object",      rObj);
+      ruleArgs.put("application", appObject);
+      ruleArgs.put("connector",   appConnector);
+      ruleArgs.put("state",       new HashMap());
+
+      ResourceObject newRObj = context.runRule(customizationRule, ruleArgs, null);
+
+      if (null != newRObj) {
+        rObj = newRObj;
+        log.debug("Got post-customization resourceObject: " + rObj.toXml());
+      }   
+
+    } catch (Exception ex) {
+
+      log.error("Error while running Customization rule for " + applicationName);
+
+    } 
+
+  }
+
+
+  Attributes argMap = new Attributes();
+  argMap.put("promoteAttributes",       "true");
+  argMap.put("correlateEntitlements",   "true");
+  argMap.put("noOptimizeReaggregation", "true");  // Note: Set to false to disable re-correlation.
+
+  Aggregator agg = new Aggregator(context, argMap);
+  if (null == agg) {
+    errorMessage = "Null Aggregator returned from constructor.  Unable to Aggregate!";
+    log.eror(errorMessage);
+    return errorMessage;
+  }
+
+ 
+  log.debug("Calling aggregate() method... ");
+  TaskResult taskResult = agg.aggregate(appObject, rObj);
+  log.debug("aggregation complete.");
+
+  if (null == taskResult) {
+    errorMessage = "ERROR: Null taskResult returned from aggregate() call.";
+    log.eror(errorMessage);
+    return errorMessage;
+  }
+
+
+  return ("Success");
+
+      
+  ]]></Source>
+        
+
+</Rule>

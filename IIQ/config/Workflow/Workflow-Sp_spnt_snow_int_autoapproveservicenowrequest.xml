@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" libraries="Identity" name="SP_SPNT_SNOW_INT_AutoApproveServiceNowRequest">
+          
+    
+    <Variable input="true" name="snApprover"/>
+          
+    
+    <Variable input="true" name="snSetUpUserName"/>
+          
+    
+    <Variable input="true" name="snApprovalStartDate"/>
+          
+    
+    <Variable input="true" name="snApprovalEndDate"/>
+          
+    
+    <Variable input="true" name="snApprovalComments"/>
+          
+    
+    <Variable input="true" name="identityRequestId"/>
+          
+    
+    <Variable input="true" name="plan"/>
+          
+    
+    <Variable input="true" name="caseName"/>
+          
+    
+    <Variable input="true" name="reqId"/>
+          
+    
+    <Variable name="workItemName"/>
+          
+    
+    <Variable name="workItemOwner"/>
+          
+    
+    <Variable name="approvalSet"/>
+          
+    
+    <Variable name="identityName"/>
+          
+    
+    <Variable name="identityDisplayName"/>
+          
+    
+    <Variable name="snApprovalStartDt"/>
+          
+    
+    <Variable name="snApprovalEndDt"/>
+          
+    
+    <Description>SP Auto Approve ServiceNow Access Request.</Description>
+          
+    
+    <Step icon="Start" name="Start" posX="28" posY="10">
+                    
+        
+        <Transition to="Initialize"/>
+                  
+    
+    </Step>
+          
+    
+    <Step icon="Default" name="Initialize" posX="98" posY="10" resultVariable="approvalSet">
+                    
+        
+        <Description>Set WorkItem name and Owner</Description>
+                    
+        
+        <Script>
+                              
+            
+            <Source><![CDATA[
+		import sailpoint.object.Identity;
+		import sailpoint.object.ApprovalItem;
+		import sailpoint.object.ApprovalSet;
+		import sailpoint.object.ProvisioningPlan;
+		import sailpoint.object.ProvisioningPlan.AbstractRequest;
+		import sailpoint.object.ProvisioningPlan.AccountRequest;
+		import sailpoint.object.ProvisioningPlan.AccountRequest.Operation;
+		import sailpoint.object.ProvisioningPlan.AttributeRequest;
+
+		import java.text.SimpleDateFormat;
+		import java.util.TimeZone;
+
+		import sailpoint.workflow.IdentityLibrary;
+
+		Identity identity = plan.getIdentity();
+
+		ApprovalSet globalSet = new ApprovalSet();
+
+		if (accountRequest != null) {
+			IdentityLibrary.addApprovalItems(identity, accountRequest, globalSet, wfcontext.getSailPointContext());
+		}
+
+		Date snApprovalStartDt = null;
+		Date snApprovalEndDt = null;
+
+		SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		sf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+		if (null != snApprovalStartDate) {
+			try {
+				snApprovalStartDt = sf.parse(snApprovalStartDate);
+			} catch (java.text.ParseException e) {
+				//do nothing
+			}
+		}
+
+		if (null != snApprovalEndDate) {
+			try {
+				snApprovalEndDt = sf.parse(snApprovalEndDate);
+			} catch (java.text.ParseException e) {
+				//do nothing
+			}
+		}
+
+		String approvalComment = "ServiceNow (" + taskId + ")";
+
+		if (snApprovalComments != null) {
+			approvalComment += ": " + snApprovalComments;
+		}
+
+		wfcontext.setVariable("identityName", identity.getName());
+		wfcontext.setVariable("identityDisplayName", identity.getDisplayName());
+		wfcontext.setVariable("workItemOwner", snSetUpUserName);
+		wfcontext.setVariable("workItemName", "ServiceNow Approval for access request: " + taskId);
+		wfcontext.setVariable("snApprovalStartDt", snApprovalStartDt);
+		wfcontext.setVariable("snApprovalEndDt", snApprovalEndDt);
+		wfcontext.setVariable("snApprovalComments", approvalComment);
+
+		return globalSet;
+
+      ]]></Source>
+                            
+        
+        </Script>
+                    
+        
+        <Transition to="Auto Approve SN Request"/>
+                  
+    
+    </Step>
+          
+    
+    <Step icon="Approval" name="Auto Approve SN Request" posX="280" posY="10">
+                    
+        
+        <Approval description="ref:workItemName" name="ref:workItemName" owner="ref:workItemOwner" renderer="lcmWorkItemRenderer.xhtml" send="identityDisplayName,identityName,approvalSet,identityRequestId,snApprover,snApprovalEndDate,snApprovalStartDate,snApprovalComments">
+                              
+            
+            <Arg name="workItemDescription" value="ref:workItemName"/>
+                              
+            
+            <Arg name="workItemRequester" value="ref:workItemOwner"/>
+                              
+            
+            <Arg name="workItemOwner" value="ref:workItemOwner"/>
+                              
+            
+            <Arg name="workItemName" value="ref:workItemName"/>
+                              
+            
+            <Arg name="workItemIdentityRequestId" value="ref:identityRequestId"/>
+                            
+        
+        </Approval>
+                    
+        
+        <Transition to="Update Identity Request Worflow Summary" when="approved"/>
+                  
+    
+    </Step>
+          
+    
+    <Step name="Update Identity Request Worflow Summary">
+                    
+        
+        <Script>
+                              
+            
+            <Source><![CDATA[
+        import sailpoint.object.IdentityRequest.ExecutionStatus;
+		import sailpoint.object.IdentityRequest;
+
+		if (null != caseName) {
+
+			sailpoint.object.TaskResult taskResultSNApproval = context.getObjectByName(sailpoint.object.TaskResult.class, caseName);
+
+			if (!taskResultSNApproval.isComplete()) {
+
+				sailpoint.object.WorkflowSummary wfSummary = (sailpoint.object.WorkflowSummary) taskResultSNApproval.getAttribute("workflowSummary");
+
+				if (null != wfSummary) {
+					List interacations = wfSummary.getInteractions();
+					sailpoint.object.WorkflowSummary.ApprovalSummary approvalSummary = interacations.get(0);
+					approvalSummary.setOwner(snApprover);
+					approvalSummary.setCompleter(snApprover);
+					approvalSummary.setState(sailpoint.object.WorkItem.State.Finished);
+
+					if (null != snApprovalStartDt)
+						approvalSummary.setStartDate(snApprovalStartDt);
+
+					if (null != snApprovalEndDt)
+						approvalSummary.setEndDate(snApprovalEndDt);
+					else
+						approvalSummary.setEndDate(new Date());
+
+					approvalSummary.getApprovalSet().getItems().get(0).setState(sailpoint.object.WorkItem.State.Finished);
+
+					if (null != snApprovalStartDt)
+						approvalSummary.getApprovalSet().getItems().get(0).setStartDate(snApprovalStartDt);
+
+					if (null != snApprovalEndDt)
+						approvalSummary.getApprovalSet().getItems().get(0).setEndDate(snApprovalEndDt);
+					else
+						approvalSummary.getApprovalSet().getItems().get(0).setEndDate(new Date());
+
+					if (snApprovalComments != null && snApprovalComments.length() > 0) {
+						List comments = new ArrayList();
+						comments.add(new sailpoint.object.Comment(snApprovalComments, snSetUpUserName));
+						approvalSummary.getApprovalSet().getItems().get(0).setComments(comments);
+					}
+
+					if (identityRequestId != null) {
+						IdentityRequest ir = context.getObjectByName(sailpoint.object.IdentityRequest.class, identityRequestId);
+						String mainTaskResultId = ir.getTaskResultId();
+
+						if (null != mainTaskResultId) {
+							sailpoint.object.TaskResult taskResultMain = sailpoint.api.ObjectUtil.lockObject(context, sailpoint.object.TaskResult.class, mainTaskResultId, context.getObjectById(sailpoint.object.TaskResult.class, mainTaskResultId).getName(), sailpoint.api.PersistenceManager.LOCK_TYPE_TRANSACTION);
+							sailpoint.object.WorkflowSummary wfSummaryMain = (sailpoint.object.WorkflowSummary) taskResultMain.getAttribute("workflowSummary");
+
+							if (null != wfSummaryMain) {
+
+								List interactionsMain = wfSummaryMain.getInteractions();
+								if (interactionsMain != null && !interactionsMain.isEmpty()) {
+
+								interactionsMain.addAll(interacations);
+								wfSummaryMain.setInteractions(interactionsMain);
+								} else {
+								wfSummaryMain.setInteractions(interacations);
+								}
+							} else {
+								wfSummaryMain = new sailpoint.object.WorkflowSummary();
+								wfSummaryMain.setInteractions(interacations);
+							}
+							taskResultMain.setAttribute("workflowSummary", wfSummaryMain);
+							context.saveObject(taskResultMain);
+							context.commitTransaction();
+							context.unlockObject(taskResultMain);
+
+							String executionStatus = ir.getExecutionStatus().toString();
+
+							if (taskResultMain.isComplete() && !"Executing".equalsIgnoreCase(executionStatus)) {
+								ir.setAttribute("approvalSummaries", interacations);
+								context.saveObject(ir);
+								context.commitTransaction();
+							}
+						}
+					}
+				}
+			}
+		}
+      ]]></Source>
+                            
+        
+        </Script>
+                    
+        
+        <Transition to="Stop"/>
+                  
+    
+    </Step>
+          
+    
+    <Step icon="Stop" name="Stop" posX="694" posY="3"/>
+        
+
+</Workflow>

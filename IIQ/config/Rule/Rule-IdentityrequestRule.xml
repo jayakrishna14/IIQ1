@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="IdentityRequest Rule" type="Validation">
+          
+    
+    <Source><![CDATA[
+   import sailpoint.object.*;
+  import sailpoint.api.*;
+  import java.util.*;
+  import java.util.List;
+  import sailpoint.object.ManagedAttribute;
+    import sailpoint.api.Terminator;
+  import java.text.SimpleDateFormat;  
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
+  List list = new ArrayList();
+List idreq = context.getObjects(IdentityRequest.class);
+  for(IdentityRequest ir : idreq){
+  Date d = ir.getCreated();
+  Date dte = new Date();
+  long diff = d.getTime() - dte.getTime();
+  if( sailpoint.tools.Util.getDaysDifference(dte,d) > 0 && sailpoint.tools.Util.getDaysDifference(dte,d) < 20){
+    ProvisioningProject pp = ir.getAttribute("provisionedProject");
+    if(pp != null){
+    ProvisioningPlan plan = pp.getMasterPlan();
+      if(plan != null){
+      String str = plan.getArguments().get("source");
+    if(str != null && str.equals("LCM")){
+      list.add(idreq);
+    }
+  }
+  }
+  }
+  }
+  
+  return list.size();
+]]></Source>
+        
+
+</Rule>

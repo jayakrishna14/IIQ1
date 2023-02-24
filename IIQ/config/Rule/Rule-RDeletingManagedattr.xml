@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="r deleting managedAttr" type="Validation">
+          
+    
+    <Source><![CDATA[
+   import sailpoint.object.*;
+  import sailpoint.api.*;
+  import java.util.*;
+  import java.util.List;
+  import sailpoint.object.ManagedAttribute;
+    import sailpoint.api.Terminator;
+List m = new ArrayList();
+  Terminator t=new Terminator(context);
+ Filter f= Filter.eq("application.name","Oldap");
+  QueryOptions qo=new QueryOptions();
+  qo.add(f);
+  List mngAttrs = context.getObjects(ManagedAttribute.class,qo);
+t.deleteObjects(ManagedAttribute.class,qo);
+ 
+]]></Source>
+        
+
+</Rule>

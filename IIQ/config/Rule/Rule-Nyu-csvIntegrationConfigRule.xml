@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="NYU-CSV Integration Config Rule" type="Validation">
+          
+    
+    <Signature returnType="ProvisioningResult">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description> The Provisioning Plan </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+  import java.io.File;
+  import java.io.FileNotFoundException;
+  import java.io.FileOutputStream;
+  import java.io.FileReader;
+  import java.io.FileWriter;
+  import java.io.IOException;
+  import java.io.OutputStreamWriter;
+  import sailpoint.tools.*;
+  import sailpoint.object.*;
+  import sailpoint.tools.GeneralException;
+  import java.sql.*;
+  import sailpoint.api.*;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.Identity;
+  import sailpoint.object.TaskDefinition;
+  import java.util.Date;
+
+  private void writeLine( String filepath,  String line) throws Exception {
+    File file = new File(filepath);
+    FileWriter fw = new FileWriter(file, true);
+    BufferedWriter bw = new BufferedWriter(fw);
+    bw.newLine();
+    bw.write(line);
+    bw.close();
+    fw.close();
+    System.out.println("Line has been written successfully!!");
+  }
+
+  String line = null;
+  String filepath = null;
+  List rolesList = new ArrayList();
+  System.out.println("Line has been written successfully!!");
+  List accReqs = plan.getAccountRequests();
+  for (int i=0; i<accReqs.size(); i++){
+    AccountRequest ar = (AccountRequest) accReqs.get(i);
+    ProvisioningPlan.AccountRequest.Operation oper = ar.getOperation();
+    ar.add(new AttributeRequest("fame_User_NETID",plan.getNativeIdentity()));
+    ar.add(new AttributeRequest("Manager_NETID","JPK284"));
+
+    Application app = context.getObjectByName(Application.class,"Test HR");
+    filepath = app.getAttributes().get("file");
+
+    if (oper != null && oper.equals(ProvisioningPlan.AccountRequest.Operation.Create)){
+      Schema sch = app.getSchema("account");
+      List schNames = sch.getAttributeNames();
+
+      StringBuffer lineItem = new StringBuffer();
+      for (int j = 0; j < schNames.size(); j++) {
+        if ( !(ar.getAttributeRequest(schNames.get(j)).getName().equals("Roles"))){
+          lineItem.append(ar.getAttributeRequest(schNames.get(j).toString()).getValue());
+          lineItem.append(",");
+        }
+        if (ar.getAttributeRequests().get(j).getName().equals("Roles")){
+          rolesList.add(ar.getAttributeRequests().get(j));
+        }
+      }
+
+      System.out.println("rolesLis+======="+rolesList.get(0));
+      if(rolesList.size() == 1){
+        lineItem.append(rolesList.get(0).getValue());
+      } else if(rolesList.size()>1) {
+        List attrValues = new ArrayList();
+        for(int i =0; i<rolesList.size(); i++){
+          attrValues.add(rolesList.get(i).getValue());
+        }
+        String finalvalue="";
+        for(String values : attrValues){
+          finalvalue=finalvalue+","+values;      
+        }
+        lineItem.append("\""+finalvalue.substring(1)+"\"");
+      }
+      line = lineItem.substring(0); //the final line to be added into csv file
+    }
+  }
+  writeLine(filepath, line);
+
+  ProvisioningResult pr = new ProvisioningResult();
+  pr.setStatus("committed");
+
+  //running account aggregation task to refresh all accounts and their entitlements (here 'HR2' is the name of the account aggregation task for the application)
+  TaskDefinition task = context.getObjectByName(TaskDefinition.class,"Test HR account aggregation");
+  TaskManager tm = new TaskManager(context);
+  tm.run(task,null);
+
+  return pr;
+
+
+
+
+  ]]></Source>
+        
+
+</Rule>

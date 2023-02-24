@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition name="Refresh Entitlement Correlation" subType="task_item_type_identity" type="Identity">
+          
+    
+    <Attributes>
+                    
+        
+        <Map>
+                              
+            
+            <entry key="TaskDefinition.runLengthAverage" value="3"/>
+                              
+            
+            <entry key="TaskDefinition.runLengthTotal" value="6"/>
+                              
+            
+            <entry key="TaskDefinition.runs" value="2"/>
+                              
+            
+            <entry key="correlateEntitlements" value="true"/>
+                            
+        
+        </Map>
+                  
+    
+    </Attributes>
+          
+    
+    <Description>
+            Refresh the business role assignments of all identities.
+        </Description>
+          
+    
+    <Parent>
+                    
+        
+        <Reference class="sailpoint.object.TaskDefinition" name="Identity Refresh"/>
+                  
+    
+    </Parent>
+        
+
+</TaskDefinition>

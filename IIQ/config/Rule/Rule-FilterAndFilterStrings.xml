@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Filter and Filter strings" type="Validation">
+          
+    
+    <Source><![CDATA[
+
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.Filter;
+  import sailpoint.object.QueryOptions;
+  import sailpoint.object.IdentityExternalAttribute;
+  import sailpoint.tools.Util;
+  import sailpoint.object.IdentityExternalAttribute;
+  import sailpoint.search.ExternalAttributeFilterBuilder;
+
+  Filter f = Filter.eq("links.attributes.sAMAccountName","James Smith");
+  Identity id = context.getUniqueObject(Identity.class,f);
+  return id;
+  
+  Filter containsAll = ExternalAttributeFilterBuilder.buildAndFilter("IdentityExternalAttribute", "id", "costCenter", Util.csvToList("R01e, L01e"), "EQ");
+  QueryOptions qo = new QueryOptions();
+  qo.add(containsAll);
+  List ids = context.getObjects(Identity.class,qo);
+  return ids.size();
+  
+  
+  Filter f = Filter.like("firstname","james",Filter.MatchMode.EXACT);
+  Identity id = context.getUniqueObject(Identity.class,f);
+  return id;
+  
+  
+  
+  List filters = new ArrayList ();
+  filters.add(Filter.eq("links.application.name","AD"));
+  filters.add(Filter.eq("links.application.name", "Oldap"));
+  filters.add(Filter.ignoreCase(Filter.notnull("manager")));
+  Filter f2 = Filter.and(filters);
+  QueryOptions qo = new QueryOptions();
+  qo.add(f2);
+  List list= context.getObjects(Identity.class,qo);
+  return list.size();
+  
+  
+  
+   List li1 = new ArrayList();
+  Filter f3 = Filter.join("Department", "Bundle.name");
+  QueryOptions qo = new QueryOptions();
+  qo.add(f3);
+  List list = context.getObjects(Identity.class,qo);
+  for(Identity id:list){
+    li1.add(id.getName());
+  }
+  return li1;
+  
+  
+   Filter myFilter = Filter.ge("EmployeeID","1a");
+  myFilter = Filter.and(myFilter,Filter.eq("Department", "Engineering"),Filter.ignoreCase(Filter.like("email","a",Filter.MatchMode.START)));
+  QueryOptions qo = new QueryOptions();
+  qo.add(myFilter);
+  List ides = context.getObjects(Identity.class,qo);
+  return ides;
+  
+  
+  Filter f1 = Filter.isempty("costCenter");
+  QueryOptions qo = new QueryOptions();
+  qo.add(f1);
+  List list= context.getObjects(Identity.class,qo);
+  return list.size();
+
+  List list = new ArrayList();
+  list.add("Engineering");
+  list.add("Finance");
+  Filter f = Filter.in("Department",list);
+  QueryOptions qo= new QueryOptions();
+  qo.addFilter(f);
+  List ides = context.getObjects(Identity.class,qo);
+  return ides.size();
+  
+  Filter myFilter = Filter.and(Filter.eq("Department","Executive Management"));
+  myFilter = Filter.and(new Filter[] { myFilter,Filter.like("email","a",Filter.MatchMode.START),Filter.ignoreCase(Filter.like("firstname","A", Filter.MatchMode.START)) });
+  QueryOptions qo = new QueryOptions();
+  qo.add(myFilter);
+  List ides = context.getObjects(Identity.class,qo);
+  return ides;
+
+
+  Filter f = Filter.join("bundles.name","Bundle.name");
+  QueryOptions qo = new QueryOptions();
+  qo.add(f);
+  List list = context.getObjects(Identity.class,qo);
+  List l1 = new ArrayList();
+  for(Identity id :list){
+    l1.add(id.getName());
+  }
+  return l1;
+
+
+  Filter myFilter = Filter.like("name", "J",Filter.MatchMode.START);
+  myFilter = Filter.and(myFilter, Filter.eq("Department", "Engineering"));
+  myFilter = Filter.and(myFilter, Filter.ignoreCase(Filter.eq("firstname","James Smith")));
+  QueryOptions qo = new QueryOptions();
+  qo.add(myFilter);
+  List list= context.getObjects(Identity.class,qo);
+  return list.size();
+
+  Filter f1 = Filter.eq("manager.name","James Smith");
+  QueryOptions qo = new QueryOptions();
+  qo.add(f1);
+  List list= context.getObjects(Identity.class,qo);
+  return list.size();
+
+
+
+  
+
+  Filter f1 = Filter.like("Department", "E",Filter.MatchMode.START);
+  QueryOptions qo = new QueryOptions();
+  qo.add(f1);
+  List list= context.getObjects(Identity.class,qo);
+  return list.size();
+
+
+  List list = new ArrayList();
+  //list.add("Engineering");
+  //list.add("Finance");
+  
+
+
+
+
+
+  ]]></Source>
+        
+
+</Rule>

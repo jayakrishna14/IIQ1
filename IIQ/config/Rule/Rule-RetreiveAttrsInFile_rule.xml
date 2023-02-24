@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Retreive Attrs in file_Rule" type="Validation">
+          
+    
+    <Source><![CDATA[
+
+ import sailpoint.object.*;
+  import sailpoint.api.*;
+  import java.util.*;
+  import java.util.List;
+  import sailpoint.object.ManagedAttribute;
+  import sailpoint.api.WorkGroup;
+
+   List list = new ArrayList();
+  String newLine = "\n";
+  List <String> identityNames = new ArrayList();
+  boolean header = true;
+		BufferedReader br = new BufferedReader(new FileReader("F:\\hr.txt"));
+        String line;
+  try {
+			while((line = br.readLine()) != null) {
+				if(header)
+				{
+					header=false;
+					continue;
+				}
+				    String[] data=line.split(",");
+				    String Name=data[0];
+				    System.out.println(Name);
+				    identityNames.add(Name);
+				    
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+ 
+  File file = new File("F:\\ApplicationAttributes.csv");
+    file.createNewFile();
+    BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+    bw.write("sAMAccountName,distinguishedName,cn,sn,dn,cn");
+  
+
+  for(String id : identityNames){
+    String sAMA = "";
+  String name = "";
+  String snAD = "";
+  String snOldap = "";
+  String dn = "";
+  String cn = "";
+    
+  Identity ide = context.getObjectByName(Identity.class,id);
+  List links = ide.getLinks();
+  for(Link li : links){
+     
+    if(li.getApplicationName().equals("AD") && li != null){
+       sAMA = li.getAttribute("sAMAccountName");
+      System.out.println("@@@@@@@"+sAMA);
+      name = li.getAttribute("distinguishedName");
+       snAD = li.getAttribute("cn");
+     
+    } 
+      
+    
+    if(li != null && li.getApplicationName().equals("Oldap") )
+    {
+       snOldap = li.getAttribute("sn");
+       dn = li.getAttribute("dn");
+       cn = li.getAttribute("cn");
+     
+    }
+     
+  }
+    bw.append(newLine);
+      bw.write(sAMA+","+name+","+snAD+","+snOldap+","+dn+","+cn);
+   
+    
+    }
+   
+   bw.flush();
+    bw.close();
+
+    ]]></Source>
+        
+
+</Rule>

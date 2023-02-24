@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="MHP-Clone IP-telephone table rule" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import java.sql.*;
+  import sailpoint.tools.JdbcUtil;
+  import java.sql.Connection;
+  import java.sql.DriverManager;
+  import java.sql.PreparedStatement;
+  import java.sql.ResultSet;
+  import java.sql.SQLException;
+  import java.util.ArrayList;
+  import java.util.Random;
+  import java.util.List;
+  import java.text.SimpleDateFormat;
+  import java.text.ParseException;
+  import java.util.Date;
+  import java.util.*;
+  import sailpoint.object.*;
+  import sailpoint.tools.*;
+  import sailpoint.api.*;
+  import sailpoint.connector.*;
+  import sailpoint.object.Attributes;
+  import sailpoint.object.Filter;
+  import sailpoint.object.Identity;
+  import sailpoint.object.QueryOptions;
+  import sailpoint.object.*;
+  import sailpoint.connector.Connector;  
+  import sailpoint.object.ResourceObject;
+
+  Connection con = null;
+  PreparedStatement preparedStatement = null;
+
+  //Filter f = Filter.and(Filter.eq("phoneAndIPStatus","pending"), Filter.notnull("username"));
+  //QueryOptions qo = new QueryOptions();
+  //qo.addFilter(f);
+  //List identities = context.getObjects(Identity.class,qo);
+  List l = new ArrayList();
+  l.add("James Smith");
+  l.add("Aaron Nichols");
+  for(String str : l){
+    Identity identity = context.getObjectByName(Identity.class,str);
+  //To Get Connection of Database
+  con = DriverManager.getConnection("jdbc:mysql://localhost:3306/test","root","8499041218");
+
+  //Executing our requirements and updating the telephoneId table in database
+    
+    if((identity.getAttribute("source") != null && identity.getAttribute("source").equals("SuccessFactors")) || (identity.getAttribute("country") != null && identity.getAttribute("country").equals("Germany"))){
+      String query = "SELECT * FROM test.telephoneid where used='No'and mobileNo is not null limit 1";
+      try{
+        PreparedStatement ps = con.prepareStatement(query);
+        ResultSet res = ps.executeQuery();
+        if(res != null){
+          while(res.next()){
+            String mobileNo = res.getString("mobileNo");
+            identity.setAttribute("telephoneNumber",mobileNo);
+            String updateQuery = "update test.telephoneid set used='Yes', userId=? where mobileNo=?";
+            PreparedStatement stmnt = con.prepareStatement(updateQuery);
+            String identityName = identity.getDisplayName();
+            stmnt.setString(1, identityName);
+            stmnt.setString(2, mobileNo);
+            stmnt.executeUpdate();
+            break;
+          }
+        }
+      }catch(Exception e) {
+        e.printStackTrace();
+      }
+    }
+    
+    //updating the IP table in Database
+    
+     String identityName = identity.getDisplayName();
+    System.out.println(identityName);
+      String query = "SELECT * FROM test.iptable where used='No'and IP is not null limit 1";
+      try{
+        preparedStatement = con.prepareStatement(query);
+          ResultSet rs = preparedStatement.executeQuery();
+          if(rs != null){
+            while(rs.next()){
+              String ipValue = rs.getString("IP");
+              identity.setAttribute("ipAddress",ipValue);
+              String updateQuery = "update test.iptable set used='Yes', userId=? where IP=?";
+              PreparedStatement stmnt = con.prepareStatement(updateQuery);
+              stmnt.setString(1, identityName);
+              stmnt.setString(2, ipValue);
+              stmnt.executeUpdate();
+              identity.setAttribute("phoneAndIPStatus","allocated");
+              context.saveObject(identity);
+              context.commitTransaction();
+              break;
+            }
+          }
+      }catch(Exception e) {
+        e.printStackTrace();
+      }
+     
+    
+    
+  }
+  ]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="set_Argument Before-Provision" type="BeforeProvisioning">
+          
+    
+    <Description>An identityiq82 server-side rule that is executed before the connector's provisioning method is called. This gives the customer the ability to customize or react to anything in the ProvisioningPlan BEFORE it is sent to the underlying connectors used in provisioning. 
+
+This rule will be called for any application found in a plan that also has a configured 'beforeProvisioningRule' configured.  
+
+The plan can be updated directly in the rule by reference and does not need to return the plan.</Description>
+          
+    
+    <Signature>
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description>
+          The ProvisioningPlan object on its way to the Connector.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="application">
+                                        
+                
+                <Description>
+          The application object that references this before/after script.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[import sailpoint.object.*;
+import sailpoint.api.*;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.integration.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.Schema;
+
+  Map map = new HashMap();
+  map.put("Domain","192.168.33.1");
+  Attributes at = new Attributes();
+  at.setMap(map);
+  
+  
+if(plan != null){
+  List accreqs = plan.getAccountRequests();
+  for(int i=0; i<accreqs.size(); i++){
+    AccountRequest acr = (AccountRequest) accreqs.get(i);
+    List attreqs = acr.getAttributeRequests();
+    for(int j=0; j<attreqs.size(); j++){
+      AttributeRequest ar = (AttributeRequest) attreqs.get(j);
+      String str = ar.getName();
+      System.out.println("==============="+str);
+      List schemas = application.getSchemas();
+      for(Schema sch:schemas){
+        System.out.println("---------------++++++"+sch);
+        List attrDef = sch.getAttributes();
+        for(AttributeDefinition adef : attrDef){
+          System.out.println("***********************-"+adef.getName());
+          if(adef.getName().equals(str))
+          	ar.setArguments(at);
+          
+        }
+        	
+      }
+     
+    }
+  }
+  System.out.println("+++++++++++++++++++beforplan-"+plan.toXml());
+}
+          
+]]></Source>
+        
+
+</Rule>

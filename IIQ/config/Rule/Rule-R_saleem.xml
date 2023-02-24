@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="R_saleem" type="Validation">
+          
+    
+    <Signature returnType="String">
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="identityName">
+                                        
+                
+                <Description>
+          The field named action, which is the raw parsed.
+          action field.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                    
+        
+        <Returns>
+                              
+            
+            <Argument name="flag">
+                                        
+                
+                <Description>
+          A normalized ApplicationActivity.Action object.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Returns>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[
+  import sailpoint.api.*;
+  import sailpoint.object.*;
+  import sailpoint.tools.*;
+
+  public  String main(String identityName) throws Exception  {
+  
+
+    Identity id = context.getObjectByName(Identity.class,identityName);
+
+    if(id !=null){
+      String att=(String) id.getAttribute("student_type");
+
+      return att;
+    }
+    else throw new Exception("identityName Variable was NULL please check once");
+  }
+ // String  identityName="Adam Kennedy";
+ // main(identityName);
+  Configuration config = context.getObject(Configuration.class,"newConfigObj");
+if ( config == null ) {
+ if ( log.isDebugEnabled() ) {
+ log.debug("Configuration ["+name+"] was not found creating new one.");
+ }
+ config = new Configuration();
+ config.setName("newConfigObj");
+}
+  ]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" name="w auditing workflow">
+          
+    
+    <Variable initializer="LCM" name="flow"/>
+          
+    
+    <Variable name="approvalSet"/>
+          
+    
+    <Variable name="string4"/>
+          
+    
+    <Variable name="string3"/>
+          
+    
+    <Variable name="string2"/>
+          
+    
+    <Variable name="string1"/>
+          
+    
+    <Variable name="source">
+                    
+        
+        <Script>
+                              
+            
+            <Source><![CDATA[
+        import sailpoint.object.Source;
+        String interfac = Source.Workflow.toString();
+        return interfac;
+      ]]></Source>
+                            
+        
+        </Script>
+                  
+    
+    </Variable>
+          
+    
+    <Variable initializer="Audit Event Page" name="target"/>
+          
+    
+    <Variable initializer="customAudit" name="action"/>
+          
+    
+    <Description>call different types of workflow LIBRARY methods which related to the AUDIT-event</Description>
+          
+    
+    <Step icon="Start" name="Start" posY="35">
+                    
+        
+        <Transition to="Workflow Handler"/>
+                    
+        
+        <Transition to="Identity Library"/>
+                    
+        
+        <Transition to="Role Library"/>
+                  
+    
+    </Step>
+          
+    
+    <Step action="audit" icon="Default" name="Workflow Handler" posX="200" posY="29">
+                    
+        
+        <Arg name="string4" value="ref:string4"/>
+                    
+        
+        <Arg name="string3" value="ref:string3"/>
+                    
+        
+        <Arg name="string2" value="ref:string2"/>
+                    
+        
+        <Arg name="string1" value="ref:string1"/>
+                    
+        
+        <Arg name="target" value="ref:target"/>
+                    
+        
+        <Arg name="action" value="ref:action"/>
+                    
+        
+        <Arg name="source" value="ref:source"/>
+                    
+        
+        <Description>
+      public Object audit(WorkflowContext wfc)
+
+      Passed a source, action, target, string1 – string4
+      value in the workflow context, creates an audit
+      event from those attributes
+    </Description>
+                    
+        
+        <Transition to="Stop"/>
+                  
+    
+    </Step>
+          
+    
+    <Step icon="Stop" name="Stop" posX="402" posY="36"/>
+          
+    
+    <Step action="auditLCMStart" icon="Default" name="Identity Library" posX="154" posY="118">
+                    
+        
+        <Arg name="flow" value="ref:flow"/>
+                    
+        
+        <Arg name="approvalSet" value="ref:approvalSet"/>
+                    
+        
+        <Description>
+      public Object auditLCMStart(WorkflowContext wfc )
+      public Object auditLCMCompletion(WorkflowContext wfc )
+      public Object auditLCMEvents(String eventType,WorkflowContext wfc )
+
+
+      All three methods have Passed an approvalSet and flow name in the
+      workflow context, creates an audit event to mark
+      the completion of each item in the approvalSet
+    </Description>
+                    
+        
+        <Transition to="Stop"/>
+                  
+    
+    </Step>
+          
+    
+    <Step action="auditRoleDifferences" icon="Default" name="Role Library" posX="125" posY="237">
+                    
+        
+        <Arg name="string1" value="ref:string1"/>
+                    
+        
+        <Arg name="target" value="ref:target"/>
+                    
+        
+        <Arg name="action" value="ref:action"/>
+                    
+        
+        <Arg name="source" value="ref:source"/>
+                    
+        
+        <Description>
+      public Object auditRoleDifferences(WorkflowContext wfc)
+
+      Passed a source, action, target, and string1 value,
+      creates audit events – one for each attribute
+      difference between role states (workflow vs
+      database); string2-4 values for the audit event
+      are calculated in this diff process</Description>
+                    
+        
+        <Transition to="Stop"/>
+                  
+    
+    </Step>
+        
+
+</Workflow>
